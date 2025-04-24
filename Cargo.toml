@@ -1,0 +1,19 @@
+[workspace]
+members = ["crates/cli", "crates/core", "crates/wasm", "crates/macros"]
+resolver = "2"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+license = "MIT"
+rust-version = "1.79"
+authors = ["Ian K. Guimaraes <ianguimaraes31@gmail.com>"]
+
+[workspace.dependencies]
+sui_ql_core = { path = "crates/core" }
+sui_ql_cli = { path = "crates/cli" }
+sui_ql_wasm = { path = "crates/wasm" }
+sui_ql_macros = { path = "crates/macros" }
+
+[profile.bench]
+debug = true
