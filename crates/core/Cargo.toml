@@ -7,3 +7,24 @@ rust-version.workspace = true
 authors.workspace = true
 
 [dependencies]
+alloy = { version = "0.6.4", features = ["std", "contract", "provider-http", "network", "rpc-types"] }
+alloy-eip7702 = "0.4.1"
+pest = "2.7.10"
+pest_derive = "2.6"
+tokio = { version = "1", features = ["macros", "rt"] }
+serde = { version = "1" }
+serde_json = { version = "1" }
+serde_with = "1.14"
+thiserror = { version = "1" }
+getrandom = { version = "0.2", features = ["js"] }
+futures = { version = "0.3", features = ["async-await"] }
+csv = "1.1"
+eql_macros = "0.1.0"
+parquet = "34.0.0"
+arrow = "34.0.0"
+anyhow = "1.0.90"
+
+[dev-dependencies]
+pretty_assertions = "1"
+pprof = { version = "0.13", features = ["flamegraph", "criterion"] }
+criterion = { version = "0.5.1", features = ["async_tokio"] }
