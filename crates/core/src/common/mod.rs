@@ -1,6 +1,6 @@
 pub mod account;
-pub mod name_services;
 pub mod coin;
+pub mod name_services;
 // pub mod block;
 // pub mod chain;
 // pub mod config;

@@ -1,16 +1,17 @@
 /// Based on foundry-common implementation
 /// https://github.com/foundry-rs/foundry/blob/master/crates/common/src/ens.rs
-use self::EnsResolver::EnsResolverInstance;
+// use self::EnsResolver::EnsResolverInstance;
 use alloy::primitives::{address, Address, Keccak256, B256};
 use alloy::providers::RootProvider;
 use alloy::sol;
 use alloy::transports::http::{Client, Http};
 use std::fmt::Display;
 use std::{borrow::Cow, str::FromStr};
+use sui_types::base_types::SuiAddress;
 
 /// Error type for ENS resolution.
 #[derive(Debug, thiserror::Error)]
-pub enum EnsError {
+pub enum NSError {
     /// Failed to get resolver from the ENS registry.
     #[error("Failed to get resolver from the ENS registry: {0}")]
     Resolver(alloy::contract::Error),
@@ -28,10 +29,10 @@ pub enum EnsError {
 /// ENS name or Ethereum Address.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NameOrAddress {
-    /// An ENS Name (format does not get checked)
+    /// An Name Service (format does not get checked)
     Name(String),
-    /// An Ethereum Address
-    Address(Address),
+    /// An Sui Address
+    Address(SuiAddress),
 }
 
 // impl NameOrAddress {
@@ -91,48 +92,62 @@ impl From<&String> for NameOrAddress {
     }
 }
 
-impl From<Address> for NameOrAddress {
-    fn from(addr: Address) -> Self {
+impl From<SuiAddress> for NameOrAddress {
+    fn from(addr: SuiAddress) -> Self {
         Self::Address(addr)
     }
 }
 
-//    
+#[cfg(test)]
+mod test {
+    use super::*;
+    use alloy::primitives::hex;
 
-/// Returns the ENS namehash as specified in [EIP-137](https://eips.ethereum.org/EIPS/eip-137)
-// pub fn namehash(name: &str) -> B256 {
-//     if name.is_empty() {
-//         return B256::ZERO;
-//     }
+    // fn assert_hex(hash: B256, val: &str) {
+    //     assert_eq!(hash.0[..], hex::decode(val).unwrap()[..]);
+    // }
 
-//     // Remove the variation selector `U+FE0F` if present.
-//     const VARIATION_SELECTOR: char = '\u{fe0f}';
-//     let name = if name.contains(VARIATION_SELECTOR) {
-//         Cow::Owned(name.replace(VARIATION_SELECTOR, ""))
-//     } else {
-//         Cow::Borrowed(name)
-//     };
+    #[test]
+    fn test_namehash() {
+        // for (name, expected) in &[
+        //     (
+        //         "",
+        //         "0x0000000000000000000000000000000000000000000000000000000000000000",
+        //     ),
+        //     (
+        //         "eth",
+        //         "0x93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae",
+        //     ),
+        //     (
+        //         "foo.eth",
+        //         "0xde9b09fd7c5f901e23a3f19fecc54828e9c848539801e86591bd9801b019f84f",
+        //     ),
+        //     (
+        //         "alice.eth",
+        //         "0x787192fc5378cc32aa956ddfdedbf26b24e8d78e40109add0eea2c1a012c3dec",
+        //     ),
+        //     (
+        //         "ret↩️rn.eth",
+        //         "0x3de5f4c02db61b221e7de7f1c40e29b6e2f07eb48d65bf7e304715cd9ed33b24",
+        //     ),
+        // ] {
+        //     assert_hex(namehash(name), expected);
+        // }
+    }
 
-//     // Generate the node starting from the right.
-//     // This buffer is `[node @ [u8; 32], label_hash @ [u8; 32]]`.
-//     let mut buffer = [0u8; 64];
-//     for label in name.rsplit('.') {
-//         // node = keccak256([node, keccak256(label)])
-
-//         // Hash the label.
-//         let mut label_hasher = Keccak256::new();
-//         label_hasher.update(label.as_bytes());
-//         label_hasher.finalize_into(&mut buffer[32..]);
-
-//         // Hash both the node and the label hash, writing into the node.
-//         let mut buffer_hasher = Keccak256::new();
-//         buffer_hasher.update(buffer.as_slice());
-//         buffer_hasher.finalize_into(&mut buffer[..32]);
-//     }
-//     buffer[..32].try_into().unwrap()
-// }
-
-// /// Returns the reverse-registrar name of an address.
-// pub fn reverse_address(addr: &Address) -> String {
-//     format!("{addr:x}.{ENS_REVERSE_REGISTRAR_DOMAIN}")
-// }
+    #[test]
+    fn test_reverse_address() {
+        // for (addr, expected) in [
+        //     (
+        //         "0x314159265dd8dbb310642f98f50c066173c1259b",
+        //         "314159265dd8dbb310642f98f50c066173c1259b.addr.reverse",
+        //     ),
+        //     (
+        //         "0x28679A1a632125fbBf7A68d850E50623194A709E",
+        //         "28679a1a632125fbbf7a68d850e50623194a709e.addr.reverse",
+        //     ),
+        // ] {
+        //     assert_eq!(reverse_address(&addr.parse().unwrap()), expected, "{addr}");
+        // }
+    }
+}
