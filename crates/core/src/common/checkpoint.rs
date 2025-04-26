@@ -15,25 +15,64 @@ use std::{
     fmt::{self, Display, Formatter}, str::FromStr, sync::Arc
 };
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+
+#[derive(thiserror::Error, Debug)]
+pub enum CheckpointNumberOrTagError {
+    #[error("Invalid checkpoint range: {0}")]
+    InvalidCheckpointRange(String),
+}
+
+
+#[derive(Debug, Copy,PartialEq, Eq, Clone)]
 pub enum CheckpointNumberOrTag {
     Number(u64),
     Latest,
     Earliest,
 }
 
+impl CheckpointNumberOrTag  {
+    /// Returns the numeric block number if explicitly set
+    pub const fn as_number(&self) -> Option<u64> {
+        match *self {
+            Self::Number(num) => Some(num),
+            _ => None,
+        }
+    }
+
+    /// Returns `true` if a numeric block number is set
+    pub const fn is_number(&self) -> bool {
+        matches!(self, Self::Number(_))
+    }
+
+    /// Returns `true` if it's "latest"
+    pub const fn is_latest(&self) -> bool {
+        matches!(self, Self::Latest)
+    }
+
+
+    /// Returns `true` if it's "earliest"
+    pub const fn is_earliest(&self) -> bool {
+        matches!(self, Self::Earliest)
+    }
+}
+
+impl From<u64> for CheckpointNumberOrTag {
+    fn from(num: u64) -> Self {
+        Self::Number(num)
+    }
+}
+
 impl FromStr for CheckpointNumberOrTag {
-    type Err = String;
+    type Err = CheckpointNumberOrTagError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "latest" | "finalized" | "safe" => Ok(Self::Latest),
             "earliest" => Ok(Self::Number(0)),
-            "pending" => Err("Sui has no pending checkpoint".to_string()),
             _ => {
                 s.parse::<u64>()
                     .map(Self::Number)
-                    .map_err(|_| format!("Invalid checkpoint identifier: {}", s))
+                    .map_err(|_|  CheckpointNumberOrTagError::InvalidCheckpointRange(s.to_string()))
             }
         }
     }
