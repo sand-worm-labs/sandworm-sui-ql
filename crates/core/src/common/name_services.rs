@@ -1,5 +1,4 @@
 use std::fmt::Display;
-use std::str::FromStr;
 use sui_json_rpc_api::IndexerApiClient;
 use sui_sdk::SuiClient;
 use sui_types::base_types::SuiAddress;
@@ -102,6 +101,8 @@ impl From<SuiAddress> for NameOrAddress {
 
 #[cfg(test)]
 mod test {
+
+    use std::str::FromStr;
 
     use super::*;
     use sui_sdk::SuiClientBuilder;

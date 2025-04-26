@@ -3,6 +3,7 @@ pub mod chain;
 pub mod coin;
 pub mod config;
 pub mod name_services;
+pub mod checkpoint;
 // pub mod block;
 // pub mod config;
 // pub mod dump;
