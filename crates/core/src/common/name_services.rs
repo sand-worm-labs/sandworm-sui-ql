@@ -1,32 +1,21 @@
-/// Based on foundry-common implementation
-/// https://github.com/foundry-rs/foundry/blob/master/crates/common/src/ens.rs
-// use self::EnsResolver::EnsResolverInstance;
-use alloy::primitives::{address, Address, Keccak256, B256};
-use alloy::providers::RootProvider;
-use alloy::sol;
-use alloy::transports::http::{Client, Http};
 use std::fmt::Display;
-use std::{borrow::Cow, str::FromStr};
+use std::str::FromStr;
+use sui_json_rpc_api::IndexerApiClient;
 use sui_types::base_types::SuiAddress;
+use sui_sdk::SuiClient;
 
-/// Error type for ENS resolution.
+/// Error type for NS resolution.
 #[derive(Debug, thiserror::Error)]
 pub enum NSError {
-    /// Failed to get resolver from the ENS registry.
-    #[error("Failed to get resolver from the ENS registry: {0}")]
-    Resolver(alloy::contract::Error),
-    /// Failed to get resolver from the ENS registry.
-    #[error("ENS resolver not found for name {0:?}")]
+    /// Failed to get resolver from the NS registry.
+    #[error("NS resolver not found for name {0:?}")]
     ResolverNotFound(String),
-    /// Failed to lookup ENS name from an address.
-    #[error("Failed to lookup ENS name from an address: {0}")]
-    Lookup(alloy::contract::Error),
-    /// Failed to resolve ENS name to an address.
-    #[error("Failed to resolve ENS name to an address: {0}")]
-    Resolve(alloy::contract::Error),
+    /// Failed to resolve NS name to an address.
+    #[error("Failed to resolve NS name to an address: {0}")]
+    Resolve(String),
 }
 
-/// ENS name or Ethereum Address.
+/// NS name or Ethereum Address.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NameOrAddress {
     /// An Name Service (format does not get checked)
@@ -35,50 +24,39 @@ pub enum NameOrAddress {
     Address(SuiAddress),
 }
 
-// impl NameOrAddress {
-//     /// Resolves the name to an Ethereum Address.
-//     pub async fn resolve(
-//         &self,
-//         provider: &RootProvider<Http<Client>>,
-//     ) -> Result<Address, EnsError> {
-//         match self {
-//             Self::Name(name) => self.resolve_name(name, provider).await,
-//             Self::Address(addr) => Ok(*addr),
-//         }
-//     }
+impl NameOrAddress {
+    /// Resolves the name to an Ethereum Address.
+    pub async fn resolve(
+        &self,
+        provider: &SuiClient,
+    ) -> Result<SuiAddress, NSError> {
+        match self {
+            Self::Name(name) => self.resolve_name(name, provider).await,
+            Self::Address(addr) => Ok(*addr),
+        }
+    }
 
-//     async fn resolve_name(
-//         &self,
-//         name: &str,
-//         provider: &RootProvider<Http<Client>>,
-//     ) -> Result<Address, EnsError> {
-//         let node = namehash(name);
-//         let registry = EnsRegistry::new(ENS_ADDRESS, provider.clone());
-
-//         let address = registry
-//             .resolver(node)
-//             .call()
-//             .await
-//             .map_err(EnsError::Resolver)?
-//             ._0;
-//         if address == Address::ZERO {
-//             return Err(EnsError::ResolverNotFound(String::from(
-//                 "Resolved to zero address",
-//             )));
-//         }
-
-//         let resolver = EnsResolverInstance::new(address, provider);
-//         let addr = resolver
-//             .addr(node)
-//             .call()
-//             .await
-//             .map_err(EnsError::Resolve)
-//             .inspect_err(|e| eprintln!("{e:?}"))?
-//             ._0;
-
-//         Ok(addr)
-//     }
-// }
+    async fn resolve_name(
+        &self,
+        name: &str,
+        provider: &SuiClient,
+    ) -> Result<SuiAddress, NSError> {
+       let  request_client =  provider.http();
+       let  address=  request_client.
+            resolve_name_service_address(name.to_string())
+            .await.map_err(|e| NSError::Resolve(e.to_string()))?;
+        let address = match address {
+            Some(addr) => Ok(addr),
+            None => Err(NSError::ResolverNotFound(String::from(
+                "Resolved to zero address",
+            ))),
+        }?;
+        if address == SuiAddress::ZERO {
+            return Err(NSError::ResolverNotFound(String::from("Resolved to zero address")));
+        }
+         Ok(address)
+    }
+}
 
 impl From<String> for NameOrAddress {
     fn from(name: String) -> Self {
@@ -100,54 +78,53 @@ impl From<SuiAddress> for NameOrAddress {
 
 #[cfg(test)]
 mod test {
+    
     use super::*;
-    use alloy::primitives::hex;
+    use sui_sdk::SuiClientBuilder;
+    use sui_types::base_types::SuiAddress;
 
-    // fn assert_hex(hash: B256, val: &str) {
-    //     assert_eq!(hash.0[..], hex::decode(val).unwrap()[..]);
-    // }
-
-    #[test]
-    fn test_namehash() {
-        // for (name, expected) in &[
-        //     (
-        //         "",
-        //         "0x0000000000000000000000000000000000000000000000000000000000000000",
-        //     ),
-        //     (
-        //         "eth",
-        //         "0x93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae",
-        //     ),
-        //     (
-        //         "foo.eth",
-        //         "0xde9b09fd7c5f901e23a3f19fecc54828e9c848539801e86591bd9801b019f84f",
-        //     ),
-        //     (
-        //         "alice.eth",
-        //         "0x787192fc5378cc32aa956ddfdedbf26b24e8d78e40109add0eea2c1a012c3dec",
-        //     ),
-        //     (
-        //         "ret↩️rn.eth",
-        //         "0x3de5f4c02db61b221e7de7f1c40e29b6e2f07eb48d65bf7e304715cd9ed33b24",
-        //     ),
-        // ] {
-        //     assert_hex(namehash(name), expected);
-        // }
+    #[tokio::test]
+    async  fn test_resolve_address() {
+        let provider = SuiClientBuilder::default().build_mainnet().await.unwrap();
+        for (name, expected) in [
+            (
+                "test.sui",
+                "0x3e04ea76cee7d2db4f41c2972ac8d929606d89f7293320f0886abb41a578190c",
+            ),
+            (
+                "example.sui",
+                "0x214a4199264348df2364acd683a3971a9927a5252747f4e0776f0506922f9db0",
+            ),
+            (
+                "data.sui",
+                "0xc862c5a237beaece4fc7f1a36f4e4ba93d78790c12c777bb6268c5c0b5585813"
+            )
+        ] {
+            let name_or_address = NameOrAddress::Name(name.to_string());
+            let resolved = name_or_address.resolve(&provider).await.unwrap();
+            assert_eq!(resolved, SuiAddress::from_str(expected).unwrap());
+        }
     }
 
-    #[test]
-    fn test_reverse_address() {
-        // for (addr, expected) in [
-        //     (
-        //         "0x314159265dd8dbb310642f98f50c066173c1259b",
-        //         "314159265dd8dbb310642f98f50c066173c1259b.addr.reverse",
-        //     ),
-        //     (
-        //         "0x28679A1a632125fbBf7A68d850E50623194A709E",
-        //         "28679a1a632125fbbf7a68d850e50623194a709e.addr.reverse",
-        //     ),
-        // ] {
-        //     assert_eq!(reverse_address(&addr.parse().unwrap()), expected, "{addr}");
-        // }
+    #[tokio::test]
+    async  fn  test_resolve_address_failed() {
+        let provider = SuiClientBuilder::default().build_mainnet().await.unwrap();
+        for name in [
+            "nonexistent1234567890.sui",
+            "thisshouldnotexist.sui",
+            "fakenamespace.sui",
+            ] {
+            let name_or_address = NameOrAddress::Name(name.to_string());
+            let result = name_or_address.resolve(&provider).await;
+
+            assert!(
+                matches!(result, Err(NSError::ResolverNotFound(_))),
+                "Expected ResolverNotFound error for name {}, got {:?}",
+                name,
+                result
+            );
+        }
     }
+
+    
 }
