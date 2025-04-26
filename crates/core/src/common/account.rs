@@ -1,54 +1,55 @@
-// use super::ens::NameOrAddress;
+use super::name_services::NameOrAddress;
 // use crate::interpreter::frontend::parser::Rule;
-// use alloy::hex::FromHexError;
-// use eql_macros::EnumVariants;
-// use pest::iterators::{Pair, Pairs};
-// use serde::{Deserialize, Serialize};
-// use std::{fmt::Display, str::FromStr};
+use alloy::hex::FromHexError;
+// use anyhow::Ok;
+use eql_macros::EnumVariants;
+use pest::iterators::{Pair, Pairs};
+use serde::{Deserialize, Serialize};
+use std::{fmt::Display, str::FromStr};
 
-// #[derive(thiserror::Error, Debug)]
-// pub enum AccountError {
-//     #[error("Unexpected token {0}")]
-//     UnexpectedToken(String),
+#[derive(thiserror::Error, Debug)]
+pub enum AccountError {
+    #[error("Unexpected token {0}")]
+    UnexpectedToken(String),
 
-//     #[error(transparent)]
-//     AccountFieldError(#[from] AccountFieldError),
+    #[error(transparent)]
+    AccountFieldError(#[from] AccountFieldError),
 
-//     #[error(transparent)]
-//     AccountFilterError(#[from] AccountFilterError),
+    #[error(transparent)]
+    AccountFilterError(#[from] AccountFilterError),
 
-//     #[error(transparent)]
-//     FromHexError(#[from] FromHexError),
-// }
+    #[error(transparent)]
+    FromHexError(#[from] FromHexError),
+}
 
-// #[derive(Debug, PartialEq, Eq, Clone)]
-// pub struct Account {
-//     id: Option<Vec<NameOrAddress>>,
-//     filter: Option<Vec<AccountFilter>>,
-//     fields: Vec<AccountField>,
-// }
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Account {
+    id: Option<Vec<NameOrAddress>>,
+    filter: Option<Vec<AccountFilter>>,
+    fields: Vec<AccountField>,
+}
 
-// impl Account {
-//     pub fn new(
-//         id: Option<Vec<NameOrAddress>>,
-//         filter: Option<Vec<AccountFilter>>,
-//         fields: Vec<AccountField>,
-//     ) -> Self {
-//         Self { id, filter, fields }
-//     }
+impl Account {
+    pub fn new(
+        id: Option<Vec<NameOrAddress>>,
+        filter: Option<Vec<AccountFilter>>,
+        fields: Vec<AccountField>,
+    ) -> Self {
+        Self { id, filter, fields }
+    }
 
-//     pub fn ids(&self) -> Option<&Vec<NameOrAddress>> {
-//         self.id.as_ref()
-//     }
+    pub fn ids(&self) -> Option<&Vec<NameOrAddress>> {
+        self.id.as_ref()
+    }
 
-//     pub fn filter(&self) -> Option<Vec<AccountFilter>> {
-//         self.filter.clone()
-//     }
+    pub fn filter(&self) -> Option<Vec<AccountFilter>> {
+        self.filter.clone()
+    }
 
-//     pub fn fields(&self) -> Vec<AccountField> {
-//         self.fields.clone()
-//     }
-// }
+    pub fn fields(&self) -> Vec<AccountField> {
+        self.fields.clone()
+    }
+}
 
 // impl TryFrom<Pairs<'_, Rule>> for Account {
 //     type Error = AccountError;
@@ -98,19 +99,19 @@
 //     }
 // }
 
-// #[derive(thiserror::Error, Debug)]
-// pub enum AccountFilterError {
-//     #[error("Unexpected token {0} for account filter")]
-//     UnexpectedToken(String),
+#[derive(thiserror::Error, Debug)]
+pub enum AccountFilterError {
+    #[error("Unexpected token {0} for account filter")]
+    UnexpectedToken(String),
 
-//     #[error(transparent)]
-//     FromHexError(#[from] FromHexError),
-// }
+    #[error(transparent)]
+    FromHexError(#[from] FromHexError),
+}
 
-// #[derive(Debug, PartialEq, Eq, Clone)]
-// pub enum AccountFilter {
-//     Address(NameOrAddress),
-// }
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum AccountFilter {
+    Address(NameOrAddress),
+}
 
 // impl TryFrom<Pair<'_, Rule>> for AccountFilter {
 //     type Error = AccountFilterError;
@@ -130,35 +131,47 @@
 //     }
 // }
 
-// #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, EnumVariants)]
-// pub enum AccountField {
-//     Address,
-//     Nonce,
-//     Balance,
-//     Code,
-//     Chain,
-// }
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, EnumVariants)]
+pub enum AccountField {
+    Address,
+    SuiBalance,
+    ObjectCount,
+    CoinCount,
+    LatestTransactionId,
+    LatestTransactionTime,
+    StakeAmount,
+    ActiveDelegations,
+    Chain,
+    NftsOwned,
+    TransactionCount,
+}
 
-// impl Display for AccountField {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         match self {
-//             AccountField::Address => write!(f, "address"),
-//             AccountField::Nonce => write!(f, "nonce"),
-//             AccountField::Balance => write!(f, "balance"),
-//             AccountField::Code => write!(f, "code"),
-//             AccountField::Chain => write!(f, "chain"),
-//         }
-//     }
-// }
+impl Display for AccountField {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AccountField::Address => write!(f, "address"),
+            AccountField::SuiBalance => write!(f, "sui_balance"),
+            AccountField::ObjectCount => write!(f, "object_count"),
+            AccountField::CoinCount => write!(f, "coin_owned"),
+            AccountField::LatestTransactionId => write!(f, "latest_transaction_id"),
+            AccountField::LatestTransactionTime => write!(f, "latest_transaction_time"),
+            AccountField::StakeAmount => write!(f, "stake_amount"),
+            AccountField::ActiveDelegations => write!(f, "active_delegations"),
+            AccountField::Chain => write!(f, "chain"),
+            AccountField::NftsOwned => write!(f, "nfts_owned"),
+            AccountField::TransactionCount => write!(f, "transaction_count"),
+        }
+    }
+}
 
-// #[derive(thiserror::Error, Debug)]
-// pub enum AccountFieldError {
-//     #[error("Invalid field for entity Account: {0}")]
-//     InvalidField(String),
+#[derive(thiserror::Error, Debug)]
+pub enum AccountFieldError {
+    #[error("Invalid field for entity Account: {0}")]
+    InvalidField(String),
 
-//     #[error(transparent)]
-//     FromHexError(#[from] FromHexError),
-// }
+    #[error(transparent)]
+    FromHexError(#[from] FromHexError),
+}
 
 // impl<'a> TryFrom<Pair<'a, Rule>> for AccountField {
 //     type Error = AccountFieldError;
@@ -168,17 +181,23 @@
 //     }
 // }
 
-// impl TryFrom<&str> for AccountField {
-//     type Error = AccountFieldError;
+impl TryFrom<&str> for AccountField {
+    type Error = AccountFieldError;
 
-//     fn try_from(value: &str) -> Result<Self, AccountFieldError> {
-//         match value {
-//             "address" => Ok(AccountField::Address),
-//             "nonce" => Ok(AccountField::Nonce),
-//             "balance" => Ok(AccountField::Balance),
-//             "code" => Ok(AccountField::Code),
-//             "chain" => Ok(AccountField::Chain),
-//             invalid_field => Err(AccountFieldError::InvalidField(invalid_field.to_string())),
-//         }
-//     }
-// }
+    fn try_from(value: &str) -> Result<Self, AccountFieldError> {
+        match value {
+            "address" => Ok(AccountField::Address),
+            "sui_balance" => Ok(AccountField::SuiBalance),
+            "object_count" => Ok(AccountField::ObjectCount),
+            "coin_count" => Ok(AccountField::CoinCount),
+            "latest_transaction_id" => Ok(AccountField::LatestTransactionId),
+            "latest_transaction_time" => Ok(AccountField::LatestTransactionTime),
+            "stake_amount" => Ok(AccountField::StakeAmount),
+            "active_delegations" => Ok(AccountField::ActiveDelegations),
+            "chain" => Ok(AccountField::Chain),
+            "nfts_owned" => Ok(AccountField::NftsOwned),
+            "transaction_count" => Ok(AccountField::TransactionCount),
+            invalid_field => Err(AccountFieldError::InvalidField(invalid_field.to_string())),
+        }
+    }
+}
