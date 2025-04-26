@@ -10,10 +10,35 @@ use anyhow::Result;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
+use sui_sdk::SuiClient;
 use std::{
-    fmt::{self, Display, Formatter},
-    sync::Arc,
+    fmt::{self, Display, Formatter}, str::FromStr, sync::Arc
 };
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum CheckpointNumberOrTag {
+    Number(u64),
+    Latest,
+    Earliest,
+}
+
+impl FromStr for CheckpointNumberOrTag {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "latest" | "finalized" | "safe" => Ok(Self::Latest),
+            "earliest" => Ok(Self::Number(0)),
+            "pending" => Err("Sui has no pending checkpoint".to_string()),
+            _ => {
+                s.parse::<u64>()
+                    .map(Self::Number)
+                    .map_err(|_| format!("Invalid checkpoint identifier: {}", s))
+            }
+        }
+    }
+}
+
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointError {
@@ -275,9 +300,9 @@ impl CheckpointRange {
         self.end
     }
 
-    pub async fn resolve_block_numbers(
+    pub async fn resolve_checkpoint_numbers(
         &self,
-        provider: &Arc<RootProvider<Http<Client>>>,
+        provider:&SuiClient,
     ) -> Result<Vec<u64>> {
         let (start_block, end_block) = self.range();
         let start_block_number = get_block_number_from_tag(provider.clone(), &start_block).await?;
@@ -323,7 +348,7 @@ impl Display for CheckpointRange {
 }
 
 pub async fn get_block_number_from_tag(
-    provider: Arc<RootProvider<Http<Client>>>,
+    provider: &SuiClient,
     number_or_tag: &CheckpointNumberOrTag,
 ) -> Result<u64> {
     match number_or_tag {
