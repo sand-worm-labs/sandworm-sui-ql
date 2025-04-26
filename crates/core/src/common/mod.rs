@@ -1,9 +1,9 @@
 pub mod account;
 pub mod chain;
+pub mod checkpoint;
 pub mod coin;
 pub mod config;
 pub mod name_services;
-pub mod checkpoint;
 // pub mod block;
 // pub mod config;
 // pub mod dump;

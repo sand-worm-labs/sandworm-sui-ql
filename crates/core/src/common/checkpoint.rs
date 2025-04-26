@@ -1,4 +1,4 @@
-use super::entity_id::{parse_block_number_or_tag, EntityIdError};
+// use super::entity_id::{parse_block_number_or_tag, EntityIdError};
 // use crate::interpreter::frontend::parser::Rule;
 use alloy::{
     eips::BlockNumberOrTag,
@@ -10,11 +10,12 @@ use anyhow::Result;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
-use sui_sdk::SuiClient;
 use std::{
-    fmt::{self, Display, Formatter}, str::FromStr, sync::Arc
+    fmt::{self, Display, Formatter},
+    str::FromStr,
+    sync::Arc,
 };
-
+use sui_sdk::SuiClient;
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointNumberOrTagError {
@@ -22,15 +23,14 @@ pub enum CheckpointNumberOrTagError {
     InvalidCheckpointRange(String),
 }
 
-
-#[derive(Debug, Copy,PartialEq, Eq, Clone)]
+#[derive(Debug, Copy, PartialEq, Eq, Clone)]
 pub enum CheckpointNumberOrTag {
     Number(u64),
     Latest,
     Earliest,
 }
 
-impl CheckpointNumberOrTag  {
+impl CheckpointNumberOrTag {
     /// Returns the numeric block number if explicitly set
     pub const fn as_number(&self) -> Option<u64> {
         match *self {
@@ -49,7 +49,6 @@ impl CheckpointNumberOrTag  {
         matches!(self, Self::Latest)
     }
 
-
     /// Returns `true` if it's "earliest"
     pub const fn is_earliest(&self) -> bool {
         matches!(self, Self::Earliest)
@@ -62,6 +61,16 @@ impl From<u64> for CheckpointNumberOrTag {
     }
 }
 
+impl fmt::Display for CheckpointNumberOrTag {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CheckpointNumberOrTag::Number(n) => write!(f, "{n}"),
+            CheckpointNumberOrTag::Latest => write!(f, "latest"),
+            CheckpointNumberOrTag::Earliest => write!(f, "earliest"),
+        }
+    }
+}
+
 impl FromStr for CheckpointNumberOrTag {
     type Err = CheckpointNumberOrTagError;
 
@@ -69,23 +78,19 @@ impl FromStr for CheckpointNumberOrTag {
         match s {
             "latest" | "finalized" | "safe" => Ok(Self::Latest),
             "earliest" => Ok(Self::Number(0)),
-            _ => {
-                s.parse::<u64>()
-                    .map(Self::Number)
-                    .map_err(|_|  CheckpointNumberOrTagError::InvalidCheckpointRange(s.to_string()))
-            }
+            _ => s
+                .parse::<u64>()
+                .map(Self::Number)
+                .map_err(|_| CheckpointNumberOrTagError::InvalidCheckpointRange(s.to_string())),
         }
     }
 }
-
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointError {
     #[error("Unexpected token {0} for block")]
     UnexpectedToken(String),
 
-    #[error(transparent)]
-    EntityIdError(#[from] EntityIdError),
     #[error(transparent)]
     CheckpointFilterError(#[from] CheckpointFilterError),
 
@@ -212,10 +217,7 @@ impl Checkpoint {
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointFilterError {
     #[error("Invalid block filter property: {0}")]
-    InvalidCheckpointFilterProperty(String),
-
-    #[error(transparent)]
-    EntityIdError(#[from] EntityIdError),
+    InvalidCheckpointFilterProperty(String)
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -266,7 +268,7 @@ pub enum CheckpointField {
     TransactionCount,
     ValidatorSignature,
     Chain,
-    EpochGasCostSummary   
+    EpochGasCostSummary,
 }
 
 impl Display for CheckpointField {
@@ -285,7 +287,6 @@ impl Display for CheckpointField {
         }
     }
 }
-
 
 impl TryFrom<&str> for CheckpointField {
     type Error = CheckpointFieldError;
@@ -308,6 +309,7 @@ impl TryFrom<&str> for CheckpointField {
         }
     }
 }
+
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointRangeError {
     #[error("Unable to fetch block number {0}")]
@@ -339,21 +341,20 @@ impl CheckpointRange {
         self.end
     }
 
-    pub async fn resolve_checkpoint_numbers(
-        &self,
-        provider:&SuiClient,
-    ) -> Result<Vec<u64>> {
+    pub async fn resolve_checkpoint_numbers(&self, provider: &SuiClient) -> Result<Vec<u64>> {
         let (start_block, end_block) = self.range();
-        let start_block_number = get_block_number_from_tag(provider.clone(), &start_block).await?;
+        let start_block_number = get_block_number_from_tag(provider, &start_block).await?;
 
         let end_block_number = match end_block {
-            Some(end) => Some(get_block_number_from_tag(provider.clone(), &end).await?),
+            Some(end) => Some(get_block_number_from_tag(provider, &end).await?),
             None => None,
         };
 
         if let Some(end) = end_block_number {
             if start_block_number > end {
-                return Err(CheckpointRangeError::StartCheckpointMustBeLessThanEndCheckpoint.into());
+                return Err(
+                    CheckpointRangeError::StartCheckpointMustBeLessThanEndCheckpoint.into(),
+                );
             }
         }
 
@@ -392,12 +393,18 @@ pub async fn get_block_number_from_tag(
 ) -> Result<u64> {
     match number_or_tag {
         CheckpointNumberOrTag::Number(number) => Ok(*number),
-        block_tag => match provider
-            .get_block_by_number(*block_tag, CheckpointTransactionsKind::Hashes)
-            .await?
+        CheckpointNumberOrTag::Earliest => Ok(0),
+        CheckpointNumberOrTag::Latest => match provider
+            .read_api()
+            .get_latest_checkpoint_sequence_number()
+            .await
         {
-            Some(block) => Ok(block.header.number),
-            None => Err(CheckpointRangeError::UnableToFetchBlockNumber(number_or_tag.clone()).into()),
+            Ok(number) => Ok(number),
+            Err(_) => Err(CheckpointRangeError::UnableToFetchCheckpointNumber(
+                number_or_tag.clone(),
+            )
+            .into()),
         },
+        _ => Err(CheckpointRangeError::UnableToFetchCheckpointNumber(number_or_tag.clone()).into()),
     }
 }
