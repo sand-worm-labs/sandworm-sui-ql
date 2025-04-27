@@ -121,57 +121,57 @@ pub enum TransactionError {
     TransactionFilterError(#[from] TransactionFilterError),
 }
 
-// impl TryFrom<Pairs<'_, Rule>> for Transaction {
-//     type Error = TransactionError;
+  
+    type Error = TransactionError;
 
-//     fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
-//         let mut ids: Option<Vec<B256>> = None;
-//         let mut filter: Option<Vec<TransactionFilter>> = None;
-//         let mut fields: Vec<TransactionField> = vec![];
+    fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
+        let mut ids: Option<Vec<B256>> = None;
+        let mut filter: Option<Vec<TransactionFilter>> = None;
+        let mut fields: Vec<TransactionField> = vec![];
 
-//         for pair in pairs {
-//             match pair.as_rule() {
-//                 Rule::tx_id => {
-//                     if let Some(ids) = ids.as_mut() {
-//                         ids.push(B256::from_str(pair.as_str())?);
-//                     } else {
-//                         ids = Some(vec![B256::from_str(pair.as_str())?]);
-//                     }
-//                 }
-//                 Rule::tx_filter => {
-//                     let next_filter = pair.into_inner().next().unwrap();
-//                     if let Some(filter) = filter.as_mut() {
-//                         filter.push(TransactionFilter::try_from(next_filter)?);
-//                     } else {
-//                         filter = Some(vec![TransactionFilter::try_from(next_filter)?]);
-//                     }
-//                 }
-//                 Rule::tx_fields => {
-//                     let inner_pairs = pair.into_inner();
+        for pair in pairs {
+            match pair.as_rule() {
+                Rule::tx_id => {
+                    if let Some(ids) = ids.as_mut() {
+                        ids.push(B256::from_str(pair.as_str())?);
+                    } else {
+                        ids = Some(vec![B256::from_str(pair.as_str())?]);
+                    }
+                }
+                Rule::tx_filter => {
+                    let next_filter = pair.into_inner().next().unwrap();
+                    if let Some(filter) = filter.as_mut() {
+                        filter.push(TransactionFilter::try_from(next_filter)?);
+                    } else {
+                        filter = Some(vec![TransactionFilter::try_from(next_filter)?]);
+                    }
+                }
+                Rule::tx_fields => {
+                    let inner_pairs = pair.into_inner();
 
-//                     if let Some(pair) = inner_pairs.peek() {
-//                         if pair.as_rule() == Rule::wildcard {
-//                             fields = TransactionField::all_variants().to_vec();
-//                             continue;
-//                         }
-//                     }
-//                     fields = inner_pairs
-//                         .map(|pair| TransactionField::try_from(pair.as_str()))
-//                         .collect::<Result<Vec<TransactionField>, TransactionFieldError>>()?;
-//                 }
-//                 _ => {
-//                     return Err(TransactionError::UnexpectedToken(pair.as_str().to_string()));
-//                 }
-//             }
-//         }
+                    if let Some(pair) = inner_pairs.peek() {
+                        if pair.as_rule() == Rule::wildcard {
+                            fields = TransactionField::all_variants().to_vec();
+                            continue;
+                        }
+                    }
+                    fields = inner_pairs
+                        .map(|pair| TransactionField::try_from(pair.as_str()))
+                        .collect::<Result<Vec<TransactionField>, TransactionFieldError>>()?;
+                }
+                _ => {
+                    return Err(TransactionError::UnexpectedToken(pair.as_str().to_string()));
+                }
+            }
+        }
 
-//         Ok(Transaction {
-//             ids,
-//             filters: filter,
-//             fields,
-//         })
-//     }
-// }
+        Ok(Transaction {
+            ids,
+            filters: filter,
+            fields,
+        })
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, EnumVariants)]
 pub enum TransactionField {
@@ -196,6 +196,7 @@ pub enum TransactionField {
     SignatureScheme,
     PublicKey,
     Signature,
+    Chain
 }
 
 impl std::fmt::Display for TransactionField {
@@ -241,6 +242,7 @@ impl TryFrom<&str> for TransactionField {
             "sender" => Ok(TransactionField::Sender),
             "recipient" => Ok(TransactionField::Recipient),
             "data" => Ok(TransactionField::Data),
+            "chain" => Ok(TransactionField::Chain),
             "gas_budget" => Ok(TransactionField::GasBudget),
             "gas_price" => Ok(TransactionField::GasPrice),
             "gas_used" => Ok(TransactionField::GasUsed),
@@ -359,7 +361,6 @@ impl TransactionFilter {
             None => Err(TransactionFilterError::MissingOperator),
         }
     }
-
 }
 
 #[cfg(test)]

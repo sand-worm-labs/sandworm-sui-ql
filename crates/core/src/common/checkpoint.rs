@@ -1,11 +1,5 @@
-// use super::entity_id::{parse_block_number_or_tag, EntityIdError};
-// use crate::interpreter::frontend::parser::Rule;
-use alloy::{
-    eips::BlockNumberOrTag,
-    providers::{Provider, RootProvider},
-    rpc::types::BlockTransactionsKind,
-    transports::http::{Client, Http},
-};
+use super::entity_id::{parse_checkpoint_number_or_tag, EntityIdError};
+use crate::interpreter::frontend::parser::Rule;
 use anyhow::Result;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
@@ -13,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     fmt::{self, Display, Formatter},
     str::FromStr,
-    sync::Arc,
 };
 use sui_sdk::SuiClient;
 
@@ -21,6 +14,8 @@ use sui_sdk::SuiClient;
 pub enum CheckpointNumberOrTagError {
     #[error("Invalid checkpoint range: {0}")]
     InvalidCheckpointRange(String),
+
+
 }
 
 #[derive(Debug, Copy, PartialEq, Eq, Clone)]
@@ -76,7 +71,7 @@ impl FromStr for CheckpointNumberOrTag {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "latest"  => Ok(Self::Latest),
+            "latest" => Ok(Self::Latest),
             "earliest" => Ok(Self::Number(0)),
             _ => s
                 .parse::<u64>()
@@ -96,6 +91,9 @@ pub enum CheckpointError {
 
     #[error(transparent)]
     CheckpointFieldError(#[from] CheckpointFieldError),
+
+    #[error(transparent)]
+    EntityIdError(#[from] EntityIdError),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -139,85 +137,88 @@ impl Checkpoint {
     }
 }
 
-// impl TryFrom<Pairs<'_, Rule>> for Block {
-//     type Error = BlockError;
+impl TryFrom<Pairs<'_, Rule>> for Checkpoint {
+    type Error = CheckpointError;
 
-//     fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
-//         let mut fields: Vec<BlockField> = vec![];
-//         let mut ids: Vec<BlockId> = vec![];
-//         let mut filter: Option<Vec<BlockFilter>> = None;
+    fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
+        let mut fields: Vec<CheckpointField> = vec![];
+        let mut ids: Vec<CheckpointId> = vec![];
+        let mut filter: Option<Vec<CheckpointFilter>> = None;
 
-//         for pair in pairs {
-//             match pair.as_rule() {
-//                 Rule::block_fields => {
-//                     let inner_pairs = pair.into_inner();
+        for pair in pairs {
+            match pair.as_rule() {
+                Rule::checkpoint_fields => {
+                    let inner_pairs = pair.into_inner();
 
-//                     if let Some(pair) = inner_pairs.peek() {
-//                         if pair.as_rule() == Rule::wildcard {
-//                             fields = BlockField::all_variants().to_vec();
-//                             continue;
-//                         }
-//                     }
+                    if let Some(pair) = inner_pairs.peek() {
+                        if pair.as_rule() == Rule::wildcard {
+                            fields = CheckpointField::all_variants().to_vec();
+                            continue;
+                        }
+                    }
 
-//                     fields = inner_pairs
-//                         .map(|pair| BlockField::try_from(pair.as_str()))
-//                         .collect::<Result<Vec<BlockField>, BlockFieldError>>()?;
-//                 }
-//                 // TODO: handle block number list
-//                 Rule::block_id => {
-//                     for inner_pair in pair.into_inner() {
-//                         match inner_pair.as_rule() {
-//                             Rule::block_range => {
-//                                 let block_id = inner_pair.as_str();
-//                                 let (start, end) = match block_id.split_once(":") {
-//                                     Some((start, end)) => {
-//                                         let start = parse_block_number_or_tag(start)?;
-//                                         let end = parse_block_number_or_tag(end)?;
-//                                         (start, Some(end))
-//                                     }
-//                                     None => parse_block_number_or_tag(block_id)
-//                                         .map(|start| (start, None))?,
-//                                 };
-//                                 ids.push(BlockId::Range(BlockRange::new(start, end)));
-//                             }
-//                             Rule::block_tag_or_number => {
-//                                 ids.push(BlockId::Number(parse_block_number_or_tag(
-//                                     inner_pair.as_str(),
-//                                 )?));
-//                             }
-//                             _ => {
-//                                 return Err(BlockError::UnexpectedToken(
-//                                     inner_pair.as_str().to_string(),
-//                                 ));
-//                             }
-//                         }
-//                     }
-//                 }
-//                 Rule::block_filter => {
-//                     filter = Some(
-//                         pair.into_inner()
-//                             .map(|pair| BlockFilter::try_from(pair))
-//                             .collect::<Result<Vec<BlockFilter>, BlockFilterError>>()?,
-//                     );
-//                 }
-//                 _ => {
-//                     return Err(BlockError::UnexpectedToken(pair.as_str().to_string()));
-//                 }
-//             }
-//         }
+                    fields = inner_pairs
+                        .map(|pair| CheckpointField::try_from(pair.as_str()))
+                        .collect::<Result<Vec<CheckpointField>, CheckpointFieldError>>()?;
+                }
+                // TODO: handle block number list
+                Rule::checkpoint_id => {
+                    for inner_pair in pair.into_inner() {
+                        match inner_pair.as_rule() {
+                            Rule::checkpoint_range => {
+                                let checkpoint_id = inner_pair.as_str();
+                                let (start, end) = match checkpoint_id.split_once(":") {
+                                    Some((start, end)) => {
+                                        let start = parse_checkpoint_number_or_tag(start)?;
+                                        let end = parse_checkpoint_number_or_tag(end)?;
+                                        (start, Some(end))
+                                    }
+                                    None => parse_checkpoint_number_or_tag(checkpoint_id)
+                                        .map(|start| (start, None))?,
+                                };
+                                ids.push(CheckpointId::Range(CheckpointRange::new(start, end)));
+                            }
+                            Rule::checkpoint_tag_or_number => {
+                                ids.push(CheckpointId::Number(parse_checkpoint_number_or_tag(
+                                    inner_pair.as_str(),
+                                )?));
+                            }
+                            _ => {
+                                return Err(CheckpointError::UnexpectedToken(
+                                    inner_pair.as_str().to_string(),
+                                ));
+                            }
+                        }
+                    }
+                }
+                Rule::checkpoint_filter => {
+                    filter = Some(
+                        pair.into_inner()
+                            .map(|pair| CheckpointFilter::try_from(pair))
+                            .collect::<Result<Vec<CheckpointFilter>, CheckpointFilterError>>()?,
+                    );
+                }
+                _ => {
+                    return Err(CheckpointError::UnexpectedToken(pair.as_str().to_string()));
+                }
+            }
+        }
 
-//         Ok(Block {
-//             ids: Some(ids),
-//             filter,
-//             fields,
-//         })
-//     }
-// }
+        Ok(Checkpoint {
+            ids: Some(ids),
+            filter,
+            fields,
+        })
+    }
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointFilterError {
     #[error("Invalid block filter property: {0}")]
     InvalidCheckpointFilterProperty(String),
+
+    #[error(transparent)]
+    EntityIdError(#[from] EntityIdError),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -225,30 +226,30 @@ pub enum CheckpointFilter {
     Range(CheckpointRange),
 }
 
-// impl TryFrom<Pair<'_, Rule>> for BlockFilter {
-//     type Error = BlockFilterError;
+impl TryFrom<Pair<'_, Rule>> for CheckpointFilter {
+    type Error = CheckpointFilterError;
 
-//     fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-//         match value.as_rule() {
-//             Rule::blockrange_filter => {
-//                 let range = value.as_str().trim_start_matches("block ").trim();
-//                 let (start, end) = match range.split_once(":") {
-//                     //if ":" is present, we have an start and an end.
-//                     Some((start, end)) => (
-//                         parse_block_number_or_tag(start)?,
-//                         Some(parse_block_number_or_tag(end)?),
-//                     ),
-//                     //else we only have start.
-//                     None => (parse_block_number_or_tag(range)?, None),
-//                 };
-//                 Ok(BlockFilter::Range(BlockRange { start, end }))
-//             }
-//             _ => Err(BlockFilterError::InvalidBlockFilterProperty(
-//                 value.as_str().to_string(),
-//             )),
-//         }
-//     }
-// }
+    fn try_from(value: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        match value.as_rule() {
+            Rule::checkpointrange_filter => {
+                let range = value.as_str().trim_start_matches("block ").trim();
+                let (start, end) = match range.split_once(":") {
+                    //if ":" is present, we have an start and an end.
+                    Some((start, end)) => (
+                        parse_checkpoint_number_or_tag(start)?,
+                        Some(parse_checkpoint_number_or_tag(end)?),
+                    ),
+                    //else we only have start.
+                    None => (parse_checkpoint_number_or_tag(range)?, None),
+                };
+                Ok(CheckpointFilter::Range(CheckpointRange { start, end }))
+            }
+            _ => Err(CheckpointFilterError::InvalidCheckpointFilterProperty(
+                value.as_str().to_string(),
+            )),
+        }
+    }
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointFieldError {

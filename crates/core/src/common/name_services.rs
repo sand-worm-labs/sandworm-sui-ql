@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::str::FromStr;
 use sui_json_rpc_api::IndexerApiClient;
 use sui_sdk::SuiClient;
 use sui_types::base_types::SuiAddress;
@@ -96,6 +97,24 @@ impl From<&String> for NameOrAddress {
 impl From<SuiAddress> for NameOrAddress {
     fn from(addr: SuiAddress) -> Self {
         Self::Address(addr)
+    }
+}
+
+impl FromStr for NameOrAddress {
+    type Err = NSError; // <- You forgot this. Idiot mistake, fix it.
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.contains(".sui") {
+            return Ok(Self::Name(s.to_string()));
+        }
+
+        if s.len() == 42 && s.starts_with("0x") {
+            match SuiAddress::from_str(s) {
+                Ok(addr) => return Ok(Self::Address(addr)),
+                Err(_) => {}
+            }
+        }
+        Err(NSError::ResolveAddress(s.to_string()))
     }
 }
 
