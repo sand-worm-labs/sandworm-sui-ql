@@ -76,7 +76,7 @@ impl FromStr for CheckpointNumberOrTag {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "latest" | "finalized" | "safe" => Ok(Self::Latest),
+            "latest"  => Ok(Self::Latest),
             "earliest" => Ok(Self::Number(0)),
             _ => s
                 .parse::<u64>()

@@ -11,7 +11,7 @@ get       = {
     WHITESPACE*
 }
 
-entity = { account_get | checkpoint_get | tx_get | event_get }
+entity = { account_get | checkpoint_get | tx_get  }
 
 account_get = {
     "SELECT" ~
@@ -49,277 +49,192 @@ tx_get = {
     (tx_id_list | tx_filter_list)
 }
 
-event_get = {
-    "SELECT" ~
-    WHITESPACE* ~
-    log_fields ~
-    WHITESPACE* ~
-    "FROM" ~
-    WHITESPACE* ~
-    "event" ~
-    WHITESPACE* ~
-    event_filter_list
-}
 
 account_fields = { (wildcard | account_field_list) }
-block_fields = { (wildcard | block_field_list) }
+checkpoint_fields = { (wildcard | checkpoint_field_list) }
 tx_fields = { (wildcard | tx_field_list) }
-log_fields = { (wildcard | log_field_list) }
 
 // Account
 account_field_list = _{ account_field ~ ("," ~ WHITESPACE* ~ account_field)* }
 account_field = {
-    "nonce" |
-    "balance" |
-    "code" |
-    "chain"
+    "address" |
+    "sui_balance" |
+    "object_count" |
+    "coin_count" |
+    "latest_transaction_id" |
+    "latest_transaction_time" |
+    "stake_amount" |
+    "active_delegations" |
+    "chain" |
+    "nfts_owned" |
+    "transaction_count"
 }
 account_id_list = _{ account_id ~ ("," ~ WHITESPACE* ~ account_id)* }
-account_id = { address | ens }
+account_id = { address | ns }
 
 account_filter_list = _{ "WHERE" ~ WHITESPACE* ~ account_filter ~ ("," ~ WHITESPACE* ~ account_filter)* }
 account_filter = { address_filter }
 
-// Block
-block_field_list = _{ block_field ~ ("," ~ WHITESPACE* ~ block_field_list)* }
+// checkpoint
+checkpoint_field_list = _{ checkpoint_field ~ ("," ~ WHITESPACE* ~ checkpoint_field_list)* }
 // TODO: Check if we need uncles
-block_field = { 
+checkpoint_field = {
+    "epoch" |
     "number" |
-    "hash" |
-    "parent_hash" |
-    "timestamp" | 
-    "state_root" |
-    "transactions_root" |
-    "receipts_root" |
-    "logs_bloom" |
-    "extra_data" |
-    "mix_hash" |
-    "total_difficulty" |
-    "base_fee_per_gas" |
-    "withdrawals_root" |
-    "blob_gas_used" |
-    "excess_blob_gas" |
-    "parent_beacon_block_root" |
-    "parent_beacon_block_root" |
-    "size" |
-    "chain"
+    "digest" |
+    "network_total_transactions" |
+    "previous_digest" |
+    "timestamp" |
+    "transaction_count" |
+    "validator_signature" |
+    "chain" |
+    "epoch_gas_cost_summary"
 }
-block_id_list = _{ block_id ~ ("," ~ WHITESPACE* ~ block_id)* }
-block_id = { block_range | block_tag_or_number }
-block_range = { block_tag_or_number  ~ ":" ~ block_tag_or_number }
-block_tag_or_number = { block_tag | block_number }
-block_tag = _{ "latest" | "earliest" | "pending" | "finalized" | "safe" }
-block_number = _{ integer }
-block_filter_list = _{ "WHERE" ~ WHITESPACE* ~ block_filter ~ ("," ~ WHITESPACE* ~ block_filter)* }
-block_filter = { blockrange_filter }
+
+checkpoint_id_list = _{ checkpoint_id ~ ("," ~ WHITESPACE* ~ checkpoint_id)* }
+checkpoint_id = { checkpoint_range | checkpoint_tag_or_number }
+checkpoint_range = { checkpoint_tag_or_number  ~ ":" ~ checkpoint_tag_or_number }
+checkpoint_tag_or_number = { checkpoint_tag | checkpoint_number }
+checkpoint_tag = _{ "latest" | "earliest"  }
+checkpoint_number = _{ integer }
+checkpoint_filter_list = _{ "WHERE" ~ WHITESPACE* ~ checkpoint_filter ~ ("," ~ WHITESPACE* ~ checkpoint_filter)* }
+checkpoint_filter = { checkpointrange_filter }
 
 // Transaction
 tx_field_list = _{ tx_field ~ ("," ~ WHITESPACE* ~ tx_field)* }
 tx_field = {
     "type" |
     "hash" |
-    "from" | 
-    "to" | 
-    "data" | 
-    "value" | 
-    "fee" |
+    "sender" |
+    "recipient" |
+    "data" |
+    "gas_budget" |
     "gas_price" |
-    "gas_limit" |
-    "effective_gas_price" |
+    "gas_used" |
     "status" |
-    "chain_id" |
-    "v" |
-    "r" |
-    "s" |
-
-    // EIP-7702
-    "authorization_list" |
-
-    // EIP-4844
-    "max_fee_per_blob_gas" |
-    "blob_versioned_hashes" |
-
-    // EIP-1559
-    "max_fee_per_gas" |
-    "max_priority_fee_per_gas" |
-
-    // EIP-2930
-    "access_list" |
-    "y_parity" |
-    "chain"
+    "executed_epoch" |
+    "checkpoint" |
+    "timestamp_ms" |
+    "total_events" |
+    "event_digests" |
+    "raw_transaction" |
+    "total_object_changes" |
+    "transaction_kind" |
+    "version" |
+    "signature_scheme" |
+    "public_key" |
+    "signature"
 }
+
 tx_id_list = _{ tx_id ~ ("," ~ WHITESPACE* ~ tx_id)* }
-tx_id = { hash } 
+tx_id = { hash }
+
 // Transaction filters
 tx_filter_list = _{ "WHERE" ~ WHITESPACE* ~ tx_filter ~ ("," ~ WHITESPACE* ~ tx_filter)* }
 tx_filter = {
     type_filter |
-    blockrange_filter |
-    from_filter |
-    to_filter |
+    sender_filter |
+    recipient_filter |
     data_filter |
-    value_filter |
+    gas_budget_filter |
     gas_price_filter |
-    effective_gas_price_filter |
-    gas_limit_filter |
+    gas_used_filter |
     status_filter |
-    max_fee_per_blob_gas_filter |
-    blob_versioned_hashes_filter |
-    max_fee_per_gas_filter |
-    max_priority_fee_per_gas_filter |
-    y_parity_filter
+    executed_epoch_filter |
+    checkpoint_filter |
+    timestamp_ms_filter
 }
 
+// Define the filter types
 type_filter_type = { equality_operators ~ number }
-from_filter_type = { equality_operators ~ address | ens }
-to_filter_type = { equality_operators ~ address }
+sender_filter_type = { equality_operators ~ address }
+recipient_filter_type = { equality_operators ~ address }
 data_filter_type = { equality_operators ~ hex_string }
-value_filter_type = { all_operators ~ number }
-gas_limit_filter_type = { all_operators ~ number }
+gas_budget_filter_type = { all_operators ~ number }
 gas_price_filter_type = { all_operators ~ number }
-effective_gas_price_filter_type = { all_operators ~ number }
+gas_used_filter_type = { all_operators ~ number }
 status_filter_type = { equality_operators ~ boolean }
-max_fee_per_blob_gas_filter_type = { all_operators ~ number }
-blob_versioned_hashes_filter_type = { equality_operators ~ hex_string }
-max_fee_per_gas_filter_type = { all_operators ~ number }
-max_priority_fee_per_gas_filter_type = { all_operators ~ number }
-y_parity_filter_type = { equality_operators ~ boolean }
+executed_epoch_filter_type = { all_operators ~ number }
+checkpoint_filter_type = { all_operators ~ number }
+timestamp_ms_filter_type = { all_operators ~ number }
 
-// TODO: add support for different ether units (ether, gwei, wei)
+// Map the filters
 type_filter = _{ "type" ~ type_filter_type }
-from_filter = _{"from" ~ from_filter_type}
-to_filter = _{"to" ~ to_filter_type}
-data_filter = _{"data" ~ data_filter_type}
-value_filter = _{"value" ~ value_filter_type}
-gas_price_filter = _{"gas_price" ~ gas_price_filter_type}
-gas_limit_filter = _{"gas_limit" ~ gas_limit_filter_type}
-status_filter = _{"status" ~ status_filter_type}
-effective_gas_price_filter = _{"effective_gas_price" ~ effective_gas_price_filter_type}
-max_fee_per_blob_gas_filter = _{"max_fee_per_blob_gas" ~ max_fee_per_blob_gas_filter_type}
-blob_versioned_hashes_filter = _{"blob_versioned_hashes" ~ blob_versioned_hashes_filter_type}
-max_fee_per_gas_filter = _{"max_fee_per_gas" ~ max_fee_per_gas_filter_type}
-max_priority_fee_per_gas_filter = _{"max_priority_fee_per_gas" ~ max_priority_fee_per_gas_filter_type}
-y_parity_filter = _{"y_parity" ~ y_parity_filter_type}
-
-// Log
-log_field_list = _{ log_field ~ ("," ~ WHITESPACE* ~ log_field)* }
-log_field =  {
-    "address" |
-    "topic0" |
-    "topic1" |
-    "topic2" |
-    "topic3" |
-    "data" |
-    "block_hash" |
-    "block_number" |
-    "block_timestamp" |
-    "transaction_hash" |
-    "transaction_index" |
-    "log_index" |
-    "removed" |
-    "chain"
-}
-log_filter_list = _{ "WHERE" ~ WHITESPACE* ~ log_filter ~ ("," ~ WHITESPACE* ~ log_filter)* }
-log_filter = {
-    address_filter |
-    topic0_filter |
-    topic1_filter |
-    topic2_filter |
-    topic3_filter |
-    blockhash_filter |
-    blockrange_filter |
-    event_signature_filter
-}
-// Log filter types
-address_filter_type = { equality_operators ~ address }
-topic0_filter_type = { equality_operators ~ hash }
-topic1_filter_type = { equality_operators ~ hash }
-topic2_filter_type = { equality_operators ~ hash }
-topic3_filter_type = { equality_operators ~ hash }
-blockhash_filter_type = { equality_operators ~ hash }
-event_signature_filter_type = { equality_operators ~ function_signature }
-// Log filters
-address_filter = _{ "address" ~ address_filter_type }
-topic0_filter = _{ "topic0" ~ topic0_filter_type }
-topic1_filter = _{ "topic1" ~ topic1_filter_type }
-topic2_filter = _{ "topic2" ~ topic2_filter_type }
-topic3_filter = _{ "topic3" ~ topic3_filter_type }
-blockhash_filter = _{ "block_hash" ~ blockhash_filter_type }
-event_signature_filter = _{ "event_signature" ~ event_signature_filter_type }
+sender_filter = _{ "sender" ~ sender_filter_type }
+recipient_filter = _{ "recipient" ~ recipient_filter_type }
+data_filter = _{ "data" ~ data_filter_type }
+gas_budget_filter = _{ "gas_budget" ~ gas_budget_filter_type }
+gas_price_filter = _{ "gas_price" ~ gas_price_filter_type }
+gas_used_filter = _{ "gas_used" ~ gas_used_filter_type }
+status_filter = _{ "status" ~ status_filter_type }
+executed_epoch_filter = _{ "executed_epoch" ~ executed_epoch_filter_type }
+//checkpoint_filter = _{ "checkpoint" ~ checkpoint_filter_type }
+timestamp_ms_filter = _{ "timestamp_ms" ~ timestamp_ms_filter_type }
 
 // Common filters
-blockrange_filter_type = { eq_operator ~ block_id }
-blockrange_filter = {"block" ~ blockrange_filter_type}
+checkpointrange_filter_type = { eq_operator ~ checkpoint_id }
+checkpointrange_filter = {"checkpoint" ~ checkpointrange_filter_type}
 
-dump = { ">>" ~ WHITESPACE* ~ file_name ~ "." ~ file_format }
-file_name = { (ASCII_ALPHANUMERIC | "-" | "_" | "/")+ }
+address_filter_type = { equality_operators ~ address }
+address_filter = _{ "address" ~ address_filter_type}
+
+dump        = { ">>" ~ WHITESPACE* ~ file_name ~ "." ~ file_format }
+file_name   = { (ASCII_ALPHANUMERIC | "-" | "_" | "/")+ }
 file_format = { "json" | "csv" | "parquet" }
 
 // Terminals
-unit = { "ether" | "gwei" | "wei" }
-number = _{ float | integer }
-integer = { (ASCII_DIGIT)+ }
-float = { integer ~ "." ~ integer }
-chain = {
-    "eth" |
-    "arb" |
-    "op" |
-    "base" |
-    "blast" |
-    "polygon" |
-    "sepolia" |
-    "mantle" |
-    "zksync" |
-    "taiko" |
-    "celo" |
-    "avalanche" |
-    "scroll" |
-    "bnb" |
-    "linea" |
-    "zora" |
-    "moonbeam" |
-    "moonriver" |
-    "ronin" |
-    "fantom" |
-    "kava" |
-    "gnosis" |
-    "mekong"
+unit       =  { "sui" | "mist" }
+number     = _{ float | integer }
+integer    =  { (ASCII_DIGIT)+ }
+float      =  { integer ~ "." ~ integer }
+chain      =  {
+    "mainnet"
+  | "testnet"
+  | "devnet"
 }
-rpc_url = { ("http://" | "https://") ~ (ASCII_ALPHANUMERIC | "." | "-" | ":" | "/")+ }
-address = { "0x" ~ (ASCII_HEX_DIGIT){40} }
-hash = { "0x" ~ (ASCII_HEX_DIGIT){64} }
-hex_string = { "0x" ~ ASCII_HEX_DIGIT{1,} }
-ens = { (ASCII_ALPHANUMERIC)+ ~ ".eth" }
-boolean = { "true" | "false" }
-function_signature = @{ ASCII_ALPHANUMERIC+ ~ "(" ~ solidity_type* ~ ("," ~ solidity_type)* ~ ")" }
-solidity_type = { 
-    ("uint" ~ size | "uint[]" | "uint" ) |
-    ("bytes" ~ size | "bytes[]" | "bytes" ) |
-    ("int" ~ size | "int[]" | "int" ) |
-    ("address" ~ "[]"*) | 
-    ("string" ~ "[]"*) |
-    "bool" 
+rpc_url    =  { ("http://" | "https://") ~ (ASCII_ALPHANUMERIC | "." | "-" | ":" | "/")+ }
+address    =  { "0x" ~ (ASCII_HEX_DIGIT){40} }
+hash       =  { "0x" ~ (ASCII_HEX_DIGIT){64} }
+hex_string =  { "0x" ~ ASCII_HEX_DIGIT{1, } }
+ns         =  { (ASCII_ALPHANUMERIC)+ ~ ".sui" }
+boolean    =  { "true" | "false" }
+
+// Sui types
+move_function  = @{ package_id ~ "::" ~ module_name ~ "::" ~ function_name ~ type_arguments? }
+package_id     =  { "0x" ~ ASCII_HEX_DIGIT{1, } }
+module_name    =  { ASCII_ALPHANUMERIC+ }
+function_name  =  { ASCII_ALPHANUMERIC+ }
+type_arguments =  { "<" ~ WHITESPACE* ~ move_type ~ (WHITESPACE* ~ "," ~ WHITESPACE* ~ move_type)* ~ WHITESPACE* ~ ">" }
+
+move_type = {
+    primitive_type
+  | vector_type
+  | custom_type
 }
-size = _{integer ~ "[]"*}
 
-all_operators = _{ equality_operators | comparison_operators }
-equality_operators = { eq_operator | neq_operator }
-comparison_operators = { gte_operator | gt_operator | lte_operator | lt_operator }
+primitive_type = { "bool" | "u8" | "u16" | "u32" | "u64" | "u128" | "u256" | "address" }
+vector_type    = { "vector" ~ "<" ~ move_type ~ ">" }
+custom_type    = { module_name ~ "::" ~ type_name }
+type_name      = { ASCII_ALPHANUMERIC+ }
 
-eq_operator = { "=" | " "}
+all_operators        = _{ equality_operators | comparison_operators }
+equality_operators   =  { eq_operator | neq_operator }
+comparison_operators =  { gte_operator | gt_operator | lte_operator | lt_operator }
+
+eq_operator  = { "=" | " " }
 neq_operator = { "!=" }
-gt_operator = { ">" }
+gt_operator  = { ">" }
 gte_operator = { ">=" }
-lt_operator = { "<" }
+lt_operator  = { "<" }
 lte_operator = { "<=" }
 
 // Helpers
-WHITESPACE = _{ " " | "\t" | NEWLINE }
-exp_separator = _{"," | ";"}
-silent_eoi = _{ !ANY }
-wildcard = { "*" }
+WHITESPACE    = _{ " " | "\t" | NEWLINE }
+exp_separator = _{ "," | ";" }
+silent_eoi    = _{ !ANY }
+wildcard      =  { "*" }
 
 // Add new rules for chain selection
 chain_selector = { chain_list | chain_wildcard }
-chain_list = { chain ~ ("," ~ WHITESPACE* ~ chain)* }
+chain_list     = { chain ~ ("," ~ WHITESPACE* ~ chain)* }
 chain_wildcard = { "*" }
