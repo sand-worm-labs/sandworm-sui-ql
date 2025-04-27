@@ -1,4 +1,5 @@
 use super::config::Config;
+use crate::interpreter::frontend::parser::Rule;
 use alloy::transports::http::reqwest::Url;
 use anyhow::Result;
 use core::fmt;
@@ -44,6 +45,20 @@ pub enum Chain {
 pub enum ChainError {
     #[error("Invalid chain {0}")]
     InvalidChain(String),
+}
+
+impl TryFrom<Pairs<'_, Rule>> for Chain {
+    type Error = ChainError;
+
+    fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
+        for pair in pairs {
+            match pair.as_rule() {
+                Rule::chain => return Ok(Chain::try_from(pair.as_str())?),
+                _ => return Err(ChainError::InvalidChain(pair.as_str().to_string())),
+            }
+        }
+        Ok(Chain::default())
+    }
 }
 
 impl Chain {
