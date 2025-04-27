@@ -217,7 +217,7 @@ impl Checkpoint {
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointFilterError {
     #[error("Invalid block filter property: {0}")]
-    InvalidCheckpointFilterProperty(String)
+    InvalidCheckpointFilterProperty(String),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
