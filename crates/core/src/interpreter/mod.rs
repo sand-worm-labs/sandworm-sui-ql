@@ -1,4 +1,4 @@
-//pub mod backend;
+pub mod backend;
 pub mod frontend;
 
 use crate::common::{query_result::QueryResult, types::Expression};

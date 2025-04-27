@@ -11,7 +11,7 @@ get       = {
     WHITESPACE*
 }
 
-entity = { account_get | block_get | tx_get | log_get }
+entity = { account_get | checkpoint_get | tx_get | event_get }
 
 account_get = {
     "SELECT" ~
@@ -25,16 +25,16 @@ account_get = {
     (account_id_list | account_filter_list)
 }
 
-block_get = {
+checkpoint_get = {
     "SELECT" ~
     WHITESPACE* ~
-    block_fields ~
+    checkpoint_fields ~
     WHITESPACE* ~
     "FROM" ~
     WHITESPACE* ~
-    "block" ~
+    "checkpoint" ~
     WHITESPACE* ~
-    (block_id_list | block_filter_list)
+    (checkpoint_id_list | checkpoint_filter_list)
 }
 
 tx_get = {
@@ -49,16 +49,16 @@ tx_get = {
     (tx_id_list | tx_filter_list)
 }
 
-log_get = {
+event_get = {
     "SELECT" ~
     WHITESPACE* ~
     log_fields ~
     WHITESPACE* ~
     "FROM" ~
     WHITESPACE* ~
-    "log" ~
+    "event" ~
     WHITESPACE* ~
-    log_filter_list
+    event_filter_list
 }
 
 account_fields = { (wildcard | account_field_list) }
