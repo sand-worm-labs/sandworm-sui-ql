@@ -68,7 +68,7 @@ fn serialize_parquet(result: &ExpressionResult) -> Result<Vec<u8>, Box<dyn Error
     writer.close()?;
 
     Ok(buf)
-}  
+}
 
 fn create_parquet_schema_and_data<T: Serialize>(
     items: &[T],
@@ -115,10 +115,12 @@ mod test {
     fn test_serialize_json() {
         let res = AccountQueryRes {
             address: None,
-            balance: Some(U256::from_str("100").unwrap()),
-            nonce: Some(0),
-            code: None,
             chain: None,
+            sui_balance: Some(1000),
+            coin_owned: None,
+            staked_amount: Some(0),
+            active_delegations: None,
+            nfts_owned: None,
         };
         let result = ExpressionResult::Account(vec![res]);
         let content = serialize_json(&result).unwrap();
@@ -131,32 +133,38 @@ mod test {
         let res = vec![
             AccountQueryRes {
                 address: None,
-                balance: Some(U256::from_str("100").unwrap()),
-                nonce: Some(0),
-                code: None,
                 chain: None,
+                sui_balance: Some(1000),
+                coin_owned: None,
+                staked_amount: Some(0),
+                active_delegations: None,
+                nfts_owned: None,
             },
             AccountQueryRes {
                 address: None,
-                balance: Some(U256::from_str("200").unwrap()),
-                nonce: Some(1),
-                code: None,
                 chain: None,
+                sui_balance: Some(1000),
+                coin_owned: None,
+                staked_amount: Some(0),
+                active_delegations: None,
+                nfts_owned: None,
             },
         ];
         let content = serialize_csv(&res).unwrap();
 
-        assert_eq!(content, "nonce,balance\n0,100\n1,200\n");
+        assert_eq!(content, "sui_balance,stake_amount\n1000,0\n1000,0\n");
     }
 
     #[test]
     fn test_serialize_parquet() {
         let res = AccountQueryRes {
             address: None,
-            balance: Some(U256::from_str("100").unwrap()),
-            nonce: Some(0),
-            code: None,
             chain: None,
+            sui_balance: Some(1000),
+            coin_owned: None,
+            staked_amount: Some(0),
+            active_delegations: None,
+            nfts_owned: None,
         };
         let result = ExpressionResult::Account(vec![res]);
         let content = serialize_parquet(&result).unwrap();
