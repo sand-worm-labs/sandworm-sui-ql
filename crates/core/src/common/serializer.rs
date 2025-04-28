@@ -108,8 +108,6 @@ fn create_parquet_schema_and_data<T: Serialize>(
 mod test {
     use super::{serialize_csv, serialize_json, serialize_parquet};
     use crate::common::query_result::{AccountQueryRes, ExpressionResult};
-    use alloy::primitives::U256;
-    use std::str::FromStr;
 
     #[test]
     fn test_serialize_json() {
