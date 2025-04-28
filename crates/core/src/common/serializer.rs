@@ -22,9 +22,8 @@ pub(crate) fn dump_results(result: &ExpressionResult, dump: &Dump) -> Result<(),
         DumpFormat::Csv => {
             let content = match result {
                 ExpressionResult::Account(accounts) => serialize_csv(accounts)?,
-                ExpressionResult::Block(blocks) => serialize_csv(blocks)?,
+                ExpressionResult::Checkpoint(blocks) => serialize_csv(blocks)?,
                 ExpressionResult::Transaction(txs) => serialize_csv(txs)?,
-                ExpressionResult::Log(logs) => serialize_csv(logs)?,
             };
 
             std::fs::write(dump.path(), content)?;
@@ -54,11 +53,10 @@ fn serialize_csv<T: Serialize>(results: &Vec<T>) -> Result<String, Box<dyn Error
 fn serialize_parquet(result: &ExpressionResult) -> Result<Vec<u8>, Box<dyn Error>> {
     let (schema, data) = match result {
         ExpressionResult::Account(accounts) => create_parquet_schema_and_data(accounts)?,
-        ExpressionResult::Block(blocks) => create_parquet_schema_and_data(blocks)?,
+        ExpressionResult::Checkpoint(blocks) => create_parquet_schema_and_data(blocks)?,
         ExpressionResult::Transaction(transactions) => {
             create_parquet_schema_and_data(transactions)?
         }
-        ExpressionResult::Log(logs) => create_parquet_schema_and_data(logs)?,
     };
 
     let batch = RecordBatch::try_new(Arc::new(schema), data)?;
@@ -70,7 +68,7 @@ fn serialize_parquet(result: &ExpressionResult) -> Result<Vec<u8>, Box<dyn Error
     writer.close()?;
 
     Ok(buf)
-}
+}  
 
 fn create_parquet_schema_and_data<T: Serialize>(
     items: &[T],

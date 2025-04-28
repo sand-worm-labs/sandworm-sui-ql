@@ -404,6 +404,5 @@ pub async fn get_block_number_from_tag(
             )
             .into()),
         },
-        _ => Err(CheckpointRangeError::UnableToFetchCheckpointNumber(number_or_tag.clone()).into()),
     }
 }

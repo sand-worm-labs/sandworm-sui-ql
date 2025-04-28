@@ -1,5 +1,5 @@
 use super::{
-    checkpoint::{BlockId, BlockRange},
+    checkpoint::{CheckpointId, CheckpointRange},
     entity_id::{parse_checkpoint_number_or_tag, EntityIdError},
     filters::{
         ComparisonFilterError, EqualityFilter, EqualityFilterError, Filter, FilterError, FilterType,
@@ -15,7 +15,6 @@ use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use sui_sdk::rpc_types::CheckpointId;
 use sui_types::base_types::SuiAddress;
 
 #[derive(Debug, PartialEq)]
@@ -50,14 +49,14 @@ impl Transaction {
         self.filters.as_ref()
     }
 
-    pub fn get_block_id_filter(&self) -> Result<&CheckpointId, TransactionFilterError> {
+    pub fn get_checkpoint_id_filter(&self) -> Result<&CheckpointId, TransactionFilterError> {
         self.filters
             .as_ref()
             .and_then(|filters| {
                 filters
                     .iter()
-                    .find(|f| matches!(f, TransactionFilter::BlockId(_)))
-                    .and_then(|filter| filter.as_block_id().ok())
+                    .find(|f| matches!(f, TransactionFilter::CheckpointId(_)))
+                    .and_then(|filter| filter.as_checkpoint_id().ok())
             })
             .ok_or(TransactionFilterError::InvalidBlockIdFilter)
     }
@@ -67,41 +66,29 @@ impl Transaction {
             filters.iter().all(|filter| match filter {
                 TransactionFilter::Type(t) => t.compare(&tx.r#type.unwrap()),
                 TransactionFilter::Hash(h) => h.compare(&tx.hash.unwrap()),
-                // TransactionFilter::Sender(f) => f.compare(&tx.from.unwrap()),
-                // TransactionFilter::Recipient(t) => t.compare(&tx.to.unwrap()),
-                // TransactionFilter::GasBudget(d) => d.compare(&tx.data.clone().unwrap()),
-                // TransactionFilter::Value(v) => v.compare(&tx.value.unwrap()),
-                // TransactionFilter::GasPrice(gp) => gp.compare(&tx.gas_price.unwrap()),
-                // TransactionFilter::GasLimit(g) => g.compare(&tx.gas_limit.unwrap()),
-                // TransactionFilter::EffectiveGasPrice(egp) => {
-                //     egp.compare(&tx.effective_gas_price.unwrap())
-                // }
-                // TransactionFilter::ChainId(cid) => cid.compare(&tx.chain_id.unwrap()),
-                // TransactionFilter::Status(s) => s.compare(&tx.status.unwrap()),
-                // TransactionFilter::V(v) => v.compare(&tx.v.unwrap()),
-                // TransactionFilter::R(r) => r.compare(&tx.r.unwrap()),
-                // TransactionFilter::S(s) => s.compare(&tx.s.unwrap()),
-                // TransactionFilter::MaxFeePerBlobGas(mfbg) => {
-                //     mfbg.compare(&tx.max_fee_per_blob_gas.unwrap())
-                // }
-                // TransactionFilter::MaxFeePerGas(mfg) => mfg.compare(&tx.max_fee_per_gas.unwrap()),
-                // TransactionFilter::MaxPriorityFeePerGas(mpfpg) => {
-                //     mpfpg.compare(&tx.max_priority_fee_per_gas.unwrap())
-                // }
-                // TransactionFilter::YParity(yp) => yp.compare(&tx.y_parity.unwrap()),
-                // TODO: once we have implemented the transaction receipt fields, should validate the block id
                 TransactionFilter::CheckpointId(_) => true,
+                TransactionFilter::Sender(k) => k.compare(&tx.sender.unwrap()),
+                TransactionFilter::Recipient(equality_filter) => todo!(),
+                TransactionFilter::GasBudget(filter_type) => todo!(),
+                TransactionFilter::GasPrice(filter_type) => todo!(),
+                TransactionFilter::GasUsed(filter_type) => todo!(),
+                TransactionFilter::Status(equality_filter) => todo!(),
+                TransactionFilter::ExecutedEpoch(filter_type) => todo!(),
+                TransactionFilter::Checkpoint(filter_type) => todo!(),
+                TransactionFilter::TimestampMs(filter_type) => todo!(),
+                TransactionFilter::EventCount(filter_type) => todo!(),
+                TransactionFilter::SignatureScheme(equality_filter) => todo!(),
             })
         } else {
             true
         }
     }
 
-    pub fn has_block_filter(&self) -> bool {
+    pub fn has_checkpoint_filter(&self) -> bool {
         match self.filters() {
             Some(filters) => filters
                 .iter()
-                .any(|f| matches!(f, TransactionFilter::BlockId(BlockId::Range(_)))),
+                .any(|f| matches!(f, TransactionFilter::CheckpointId(CheckpointId::Range(_)))),
             None => false,
         }
     }
@@ -358,6 +345,104 @@ impl TransactionFilter {
                 Ok(constructor(filter))
             }
             None => Err(TransactionFilterError::MissingOperator),
+        }
+    }
+    fn try_from(pair: Pair<'_, Rule>) -> Result<Self, TransactionFilterError> {
+        match pair.as_rule() {
+            Rule::checkpointrange_filter => {
+                let range = pair
+                    .as_str()
+                    .trim_start_matches("checkpoint ")
+                    .trim_start_matches(|c: char| c.is_whitespace() || c == '=')
+                    .trim();
+
+                let (start, end) = match range.split_once(':') {
+                    // if ":" is present, we have a start and an end
+                    Some((start, end)) => (
+                        parse_checkpoint_number_or_tag(start)?,
+                        Some(parse_checkpoint_number_or_tag(end)?),
+                    ),
+                    // else we only have start
+                    None => (parse_checkpoint_number_or_tag(range)?, None),
+                };
+                Ok(TransactionFilter::CheckpointId(CheckpointId::Range(
+                    CheckpointRange::new(start, end),
+                )))
+            }
+            Rule::type_filter_type => Self::parse_equality_filter(
+                pair,
+                |s| s.parse::<u8>().unwrap(),
+                TransactionFilter::Type,
+            ),
+            Rule::sender_filter_type => Self::parse_filter(
+                pair,
+                |s| U256::from_str(s).unwrap(),
+                TransactionFilter::Value,
+            ),
+            Rule::recipient_filter_type => Self::parse_filter(
+                pair,
+                |s| s.parse::<u64>().unwrap(),
+                TransactionFilter::GasLimit,
+            ),
+            Rule::gas_price_filter_type => Self::parse_filter(
+                pair,
+                |s| s.parse::<u128>().unwrap(),
+                TransactionFilter::GasPrice,
+            ),
+            Rule::max_fee_per_blob_gas_filter_type => Self::parse_filter(
+                pair,
+                |s| s.parse::<u128>().unwrap(),
+                TransactionFilter::MaxFeePerBlobGas,
+            ),
+            Rule::max_fee_per_gas_filter_type => Self::parse_filter(
+                pair,
+                |s| s.parse::<u128>().unwrap(),
+                TransactionFilter::MaxFeePerGas,
+            ),
+            Rule::max_priority_fee_per_gas_filter_type => Self::parse_filter(
+                pair,
+                |s| s.parse::<u128>().unwrap(),
+                TransactionFilter::MaxPriorityFeePerGas,
+            ),
+            Rule::status_filter_type => {
+                let mut inner_pair = pair.into_inner();
+                let operator = inner_pair.next().unwrap();
+                let value = inner_pair.as_str().trim();
+
+                Ok(TransactionFilter::Status(
+                    EqualityFilter::try_from((operator, value == "true")).unwrap(),
+                ))
+            }
+            Rule::from_filter_type => Self::parse_equality_filter(
+                pair,
+                |s| Address::from_str(s).unwrap(),
+                TransactionFilter::From,
+            ),
+            Rule::to_filter_type => Self::parse_equality_filter(
+                pair,
+                |s| Address::from_str(s).unwrap(),
+                TransactionFilter::To,
+            ),
+            Rule::data_filter_type => {
+                let mut inner_pair = pair.into_inner();
+                let operator = inner_pair.next().unwrap();
+                let value = alloy::primitives::Bytes::from_str(inner_pair.as_str()).unwrap();
+                let result = EqualityFilter::try_from((operator, value)).unwrap();
+
+                Ok(TransactionFilter::Data(result))
+            }
+            Rule::y_parity_filter_type => {
+                let mut inner_pair = pair.into_inner();
+                let operator = inner_pair.next().unwrap();
+                let value = inner_pair.as_str();
+
+                Ok(TransactionFilter::YParity(
+                    EqualityFilter::try_from((operator, value == "true")).unwrap(),
+                ))
+            }
+            _ => Err(TransactionFilterError::InvalidTransactionFilterProperty(
+                pair.as_str().to_string(),
+            )),
         }
     }
 }
