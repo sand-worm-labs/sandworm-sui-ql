@@ -14,9 +14,9 @@ use alloy::{
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use sui_sdk::rpc_types::CheckpointId;
 use sui_types::base_types::SuiAddress;
-use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
 pub struct Transaction {
@@ -198,7 +198,7 @@ pub enum TransactionField {
     SignatureScheme,
     PublicKey,
     Signature,
-    Chain
+    Chain,
 }
 
 impl std::fmt::Display for TransactionField {
@@ -259,7 +259,7 @@ impl TryFrom<&str> for TransactionField {
             "raw_transaction" => Ok(TransactionField::RawTransaction),
             "total_object_changes" => Ok(TransactionField::TotalObjectChanges),
             "transaction_kind" => Ok(TransactionField::TransactionKind),
-            "version" => Ok(TransactionField::Version),  
+            "version" => Ok(TransactionField::Version),
             "signature_scheme" => Ok(TransactionField::SignatureScheme),
             "public_key" => Ok(TransactionField::PublicKey),
             "signature" => Ok(TransactionField::Signature),
@@ -290,21 +290,20 @@ pub enum TransactionFilterError {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum TransactionFilter {
-    Type(EqualityFilter<u8>),                    
-    Hash(EqualityFilter<B256>),                  
-    Sender(EqualityFilter<SuiAddress>),          
-    Recipient(EqualityFilter<SuiAddress>),          
-    GasBudget(FilterType<u128>),                  
-    GasPrice(FilterType<u64>),                   
-    GasUsed(FilterType<u64>),                     
-    Status(EqualityFilter<bool>),                 
-    ExecutedEpoch(FilterType<u64>),               
-    Checkpoint(FilterType<u64>),                  
-    TimestampMs(FilterType<u64>),                 
-    EventCount(FilterType<u64>),                  // Number of events emitted
-    SignatureScheme(EqualityFilter<u8>), 
-    CheckpointId(CheckpointId)  
-
+    Type(EqualityFilter<u8>),
+    Hash(EqualityFilter<B256>),
+    Sender(EqualityFilter<SuiAddress>),
+    Recipient(EqualityFilter<SuiAddress>),
+    GasBudget(FilterType<u128>),
+    GasPrice(FilterType<u64>),
+    GasUsed(FilterType<u64>),
+    Status(EqualityFilter<bool>),
+    ExecutedEpoch(FilterType<u64>),
+    Checkpoint(FilterType<u64>),
+    TimestampMs(FilterType<u64>),
+    EventCount(FilterType<u64>), // Number of events emitted
+    SignatureScheme(EqualityFilter<u8>),
+    CheckpointId(CheckpointId),
 }
 
 impl TransactionFilter {

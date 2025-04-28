@@ -14,8 +14,6 @@ use sui_sdk::SuiClient;
 pub enum CheckpointNumberOrTagError {
     #[error("Invalid checkpoint range: {0}")]
     InvalidCheckpointRange(String),
-
-
 }
 
 #[derive(Debug, Copy, PartialEq, Eq, Clone)]

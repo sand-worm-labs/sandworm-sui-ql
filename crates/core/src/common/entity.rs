@@ -1,10 +1,7 @@
 use super::account::AccountError;
 use super::transaction::TransactionError;
 use crate::common::{
-    account::Account,
-    checkpoint::Checkpoint,
-    checkpoint::CheckpointError, 
-    transaction::Transaction,
+    account::Account, checkpoint::Checkpoint, checkpoint::CheckpointError, transaction::Transaction,
 };
 use crate::interpreter::frontend::parser::Rule;
 use pest::iterators::Pairs;

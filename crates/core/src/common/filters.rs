@@ -1,8 +1,6 @@
 use crate::interpreter::frontend::parser::Rule;
 use pest::iterators::Pair;
 
-
-
 pub trait Filter<T> {
     fn compare(&self, a: &T) -> bool;
 }
