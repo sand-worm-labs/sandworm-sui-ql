@@ -1,4 +1,3 @@
-use std::fmt::Display;
 use std::str::FromStr;
 use sui_json_rpc_api::IndexerApiClient;
 use sui_sdk::SuiClient;
