@@ -21,9 +21,6 @@ pub enum EntityError {
     TransactionError(#[from] TransactionError),
 
     #[error(transparent)]
-    LogsError(#[from] LogsError),
-
-    #[error(transparent)]
     CheckpointError(#[from] CheckpointError),
 
     #[error(transparent)]
@@ -35,7 +32,6 @@ pub enum Entity {
     Account(Account),
     Checkpoint(Checkpoint),
     Transaction(Transaction),
-    Logs(Logs),
 }
 
 impl TryFrom<Pairs<'_, Rule>> for Entity {
@@ -49,8 +45,8 @@ impl TryFrom<Pairs<'_, Rule>> for Entity {
                     return Ok(Entity::Account(account));
                 }
                 Rule::checkpoint_get => {
-                    let block = Block::try_from(pair.into_inner())?;
-                    return Ok(Entity::Block(block));
+                    let checkpoint = Checkpoint::try_from(pair.into_inner())?;
+                    return Ok(Entity::Checkpoint(checkpoint));
                 }
                 Rule::tx_get => {
                     let tx = Transaction::try_from(pair.into_inner())?;

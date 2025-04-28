@@ -6,7 +6,6 @@ pub mod config;
 pub mod dump;
 pub mod entity_id;
 pub mod entity;
-pub mod event;
 pub mod filters;
 pub mod name_services;
 pub mod query_result;
