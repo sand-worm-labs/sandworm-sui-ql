@@ -42,18 +42,15 @@ impl ExecutionEngine {
 
     async fn run_get_expr(&self, expr: &GetExpression) -> Result<ExpressionResult> {
         let result = match &expr.entity {
-            Entity::Block(block) => {
-                ExpressionResult::Block(resolve_block_query(block, &expr.chains).await?)
+            Entity::Checkpoint(block) => {
+                ExpressionResult::(resolve_block_query(block, &expr.chains).await?)
             }
             Entity::Account(account) => {
                 ExpressionResult::Account(resolve_account_query(account, &expr.chains).await?)
             }
             Entity::Transaction(transaction) => ExpressionResult::Transaction(
                 resolve_transaction_query(transaction, &expr.chains).await?,
-            ),
-            Entity::Logs(logs) => {
-                ExpressionResult::Log(resolve_log_query(logs, &expr.chains).await?)
-            }
+            )
         };
 
         if let Some(dump) = &expr.dump {

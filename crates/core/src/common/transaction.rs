@@ -1,6 +1,6 @@
 use super::{
-    block::{BlockId, BlockRange},
-    entity_id::{parse_block_number_or_tag, EntityIdError},
+    checkpoint::{BlockId, BlockRange},
+    entity_id::{parse_checkpoint_number_or_tag, EntityIdError},
     filters::{
         ComparisonFilterError, EqualityFilter, EqualityFilterError, Filter, FilterError, FilterType,
     },
@@ -67,28 +67,28 @@ impl Transaction {
             filters.iter().all(|filter| match filter {
                 TransactionFilter::Type(t) => t.compare(&tx.r#type.unwrap()),
                 TransactionFilter::Hash(h) => h.compare(&tx.hash.unwrap()),
-                TransactionFilter::Sender(f) => f.compare(&tx.from.unwrap()),
-                TransactionFilter::Recipient(t) => t.compare(&tx.to.unwrap()),
-                TransactionFilter::GasBudget(d) => d.compare(&tx.data.clone().unwrap()),
-                TransactionFilter::Value(v) => v.compare(&tx.value.unwrap()),
-                TransactionFilter::GasPrice(gp) => gp.compare(&tx.gas_price.unwrap()),
-                TransactionFilter::GasLimit(g) => g.compare(&tx.gas_limit.unwrap()),
-                TransactionFilter::EffectiveGasPrice(egp) => {
-                    egp.compare(&tx.effective_gas_price.unwrap())
-                }
-                TransactionFilter::ChainId(cid) => cid.compare(&tx.chain_id.unwrap()),
-                TransactionFilter::Status(s) => s.compare(&tx.status.unwrap()),
-                TransactionFilter::V(v) => v.compare(&tx.v.unwrap()),
-                TransactionFilter::R(r) => r.compare(&tx.r.unwrap()),
-                TransactionFilter::S(s) => s.compare(&tx.s.unwrap()),
-                TransactionFilter::MaxFeePerBlobGas(mfbg) => {
-                    mfbg.compare(&tx.max_fee_per_blob_gas.unwrap())
-                }
-                TransactionFilter::MaxFeePerGas(mfg) => mfg.compare(&tx.max_fee_per_gas.unwrap()),
-                TransactionFilter::MaxPriorityFeePerGas(mpfpg) => {
-                    mpfpg.compare(&tx.max_priority_fee_per_gas.unwrap())
-                }
-                TransactionFilter::YParity(yp) => yp.compare(&tx.y_parity.unwrap()),
+                // TransactionFilter::Sender(f) => f.compare(&tx.from.unwrap()),
+                // TransactionFilter::Recipient(t) => t.compare(&tx.to.unwrap()),
+                // TransactionFilter::GasBudget(d) => d.compare(&tx.data.clone().unwrap()),
+                // TransactionFilter::Value(v) => v.compare(&tx.value.unwrap()),
+                // TransactionFilter::GasPrice(gp) => gp.compare(&tx.gas_price.unwrap()),
+                // TransactionFilter::GasLimit(g) => g.compare(&tx.gas_limit.unwrap()),
+                // TransactionFilter::EffectiveGasPrice(egp) => {
+                //     egp.compare(&tx.effective_gas_price.unwrap())
+                // }
+                // TransactionFilter::ChainId(cid) => cid.compare(&tx.chain_id.unwrap()),
+                // TransactionFilter::Status(s) => s.compare(&tx.status.unwrap()),
+                // TransactionFilter::V(v) => v.compare(&tx.v.unwrap()),
+                // TransactionFilter::R(r) => r.compare(&tx.r.unwrap()),
+                // TransactionFilter::S(s) => s.compare(&tx.s.unwrap()),
+                // TransactionFilter::MaxFeePerBlobGas(mfbg) => {
+                //     mfbg.compare(&tx.max_fee_per_blob_gas.unwrap())
+                // }
+                // TransactionFilter::MaxFeePerGas(mfg) => mfg.compare(&tx.max_fee_per_gas.unwrap()),
+                // TransactionFilter::MaxPriorityFeePerGas(mpfpg) => {
+                //     mpfpg.compare(&tx.max_priority_fee_per_gas.unwrap())
+                // }
+                // TransactionFilter::YParity(yp) => yp.compare(&tx.y_parity.unwrap()),
                 // TODO: once we have implemented the transaction receipt fields, should validate the block id
                 TransactionFilter::CheckpointId(_) => true,
             })

@@ -19,18 +19,16 @@ impl QueryResult {
 pub enum ExpressionResult {
     #[serde(rename = "account")]
     Account(Vec<AccountQueryRes>),
-    #[serde(rename = "block")]
-    Block(Vec<BlockQueryRes>),
+    #[serde(rename = "checkpoint")]
+    Checkpoint(Vec<CheckpointQueryRes>),
     #[serde(rename = "transaction")]
     Transaction(Vec<TransactionQueryRes>),
-    #[serde(rename = "log")]
-    Log(Vec<LogQueryRes>),
 }
 
 // TODO: should this be replaced with Alloy's Block?
 #[serde_with::skip_serializing_none]
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
-pub struct BlockQueryRes {
+pub struct CheckpointQueryRes {
     pub chain: Option<Chain>,
     pub number: Option<u64>,
     pub timestamp: Option<u64>,
@@ -52,7 +50,7 @@ pub struct BlockQueryRes {
     pub parent_beacon_block_root: Option<B256>,
 }
 
-impl Default for BlockQueryRes {
+impl Default for CheckpointQueryRes {
     fn default() -> Self {
         Self {
             chain: None,

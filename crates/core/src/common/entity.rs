@@ -1,7 +1,8 @@
 use super::account::AccountError;
 use super::transaction::TransactionError;
 use crate::common::{
-    account::Account, checkpoint::Checkpoint, checkpoint::CheckpointError, transaction::Transaction,
+    account::Account, checkpoint::Checkpoint, checkpoint::CheckpointError, coin::Coin,
+    coin::CoinError, transaction::Transaction,
 };
 use crate::interpreter::frontend::parser::Rule;
 use pest::iterators::Pairs;
@@ -22,6 +23,9 @@ pub enum EntityError {
 
     #[error(transparent)]
     AccountError(#[from] AccountError),
+
+    #[error(transparent)]
+    CoinError(#[from] CoinError),
 }
 
 #[derive(Debug, PartialEq)]
@@ -29,6 +33,7 @@ pub enum Entity {
     Account(Account),
     Checkpoint(Checkpoint),
     Transaction(Transaction),
+    Coin(Coin),
 }
 
 impl TryFrom<Pairs<'_, Rule>> for Entity {
@@ -49,6 +54,10 @@ impl TryFrom<Pairs<'_, Rule>> for Entity {
                     let tx = Transaction::try_from(pair.into_inner())?;
                     return Ok(Entity::Transaction(tx));
                 }
+                // Rule::coin_get => {
+                //     let coin = Coin::try_from(pair.into_inner())?;
+                //     return Ok(Entity::Coin(coin));
+                // }
                 _ => return Err(EntityError::UnexpectedToken(pair.as_str().to_string())),
             }
         }

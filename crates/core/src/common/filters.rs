@@ -5,7 +5,7 @@ pub trait Filter<T> {
     fn compare(&self, a: &T) -> bool;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum FilterType<T> {
     Equality(EqualityFilter<T>),
     Comparison(ComparisonFilter<T>),
