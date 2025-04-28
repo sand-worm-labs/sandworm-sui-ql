@@ -7,7 +7,7 @@ version = "0.0.1"
 edition = "2021"
 license = "MIT"
 rust-version = "1.79"
-authors = ["Ian K. Guimaraes <ianguimaraes31@gmail.com>"]
+authors = ["Ifechukwu Daniel <dandynamicx@gmail.com>"]
 
 [workspace.dependencies]
 sui_ql_core = { path = "crates/core" }

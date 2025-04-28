@@ -22,6 +22,7 @@ csv = "1.1"
 eql_macros = "0.1.0"
 parquet = "34.0.0"
 anyhow = "1.0.90"
+arrow = "34.0.0"
 sui_types = { git = "https://github.com/mystenlabs/sui", package = "sui-types"}
 sui_sdk = { git = "https://github.com/mystenlabs/sui", package = "sui-sdk"}
 sui_json_rpc_api = { git = "https://github.com/mystenlabs/sui", package = "sui-json-rpc-api"}
