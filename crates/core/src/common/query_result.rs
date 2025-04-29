@@ -3,6 +3,7 @@ use alloy::primitives::{Address, Bloom, Bytes, FixedBytes, B256, U256};
 use alloy_eip7702::SignedAuthorization;
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize, Serializer};
+use sui_types::base_types::SuiAddress;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct QueryResult {
@@ -79,21 +80,24 @@ impl Default for CheckpointQueryRes {
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct AccountQueryRes {
     pub chain: Option<Chain>,
-    pub nonce: Option<u64>,
-    #[serde(serialize_with = "serialize_option_u256")]
-    pub balance: Option<U256>,
-    pub address: Option<Address>,
-    pub code: Option<Bytes>,
+    pub sui_balance: Option<u128>,
+    pub coin_owned: Option<u8>,
+    pub staked_amount: Option<u8>,
+    pub address: Option<SuiAddress>,
+    pub active_delegations: Option<u8>,
+    pub nfts_owned: Option<u8>,
 }
 
 impl Default for AccountQueryRes {
     fn default() -> Self {
         Self {
             chain: None,
-            nonce: None,
-            balance: None,
+            sui_balance: None,
+            coin_owned: None,
+            staked_amount: None,
             address: None,
-            code: None,
+            active_delegations: None,
+            nfts_owned: None,
         }
     }
 }

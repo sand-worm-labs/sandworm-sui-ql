@@ -389,17 +389,17 @@ impl TransactionFilter {
                 |s| s.parse::<u128>().unwrap(),
                 TransactionFilter::GasPrice,
             ),
-            Rule::max_fee_per_blob_gas_filter_type => Self::parse_filter(
+            Rule::gas_budget_filter_type => Self::parse_filter(
                 pair,
                 |s| s.parse::<u128>().unwrap(),
                 TransactionFilter::MaxFeePerBlobGas,
             ),
-            Rule::max_fee_per_gas_filter_type => Self::parse_filter(
+            Rule::gas_used_filter_type => Self::parse_filter(
                 pair,
                 |s| s.parse::<u128>().unwrap(),
                 TransactionFilter::MaxFeePerGas,
             ),
-            Rule::max_priority_fee_per_gas_filter_type => Self::parse_filter(
+            Rule::executed_epoch_filter_type => Self::parse_filter(
                 pair,
                 |s| s.parse::<u128>().unwrap(),
                 TransactionFilter::MaxPriorityFeePerGas,
@@ -413,7 +413,7 @@ impl TransactionFilter {
                     EqualityFilter::try_from((operator, value == "true")).unwrap(),
                 ))
             }
-            Rule::from_filter_type => Self::parse_equality_filter(
+            Rule::timestamp_ms_filter_type => Self::parse_equality_filter(
                 pair,
                 |s| Address::from_str(s).unwrap(),
                 TransactionFilter::From,
