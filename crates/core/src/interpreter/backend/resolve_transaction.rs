@@ -1,6 +1,6 @@
 use super::resolve_block::{batch_get_blocks, get_block};
 use crate::common::{
-    block::BlockId,
+    checkpoint::BlockId,
     chain::ChainOrRpc,
     query_result::TransactionQueryRes,
     transaction::{Transaction, TransactionField},

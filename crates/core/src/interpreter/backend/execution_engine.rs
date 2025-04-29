@@ -1,5 +1,6 @@
 use super::{
-    resolve_account::resolve_account_query, resolve_checkpoint::resolve_block_query,
+    resolve_account::resolve_account_query, 
+    resolve_checkpoint::resolve_checkpoint_query,
     resolve_transaction::resolve_transaction_query,
 };
 use crate::common::{
@@ -42,8 +43,8 @@ impl ExecutionEngine {
 
     async fn run_get_expr(&self, expr: &GetExpression) -> Result<ExpressionResult> {
         let result = match &expr.entity {
-            Entity::Checkpoint(block) => {
-                ExpressionResult::Checkpoint(resolve_block_query(block, &expr.chains).await?)
+            Entity::Checkpoint(checkpoint) => {
+                ExpressionResult::Checkpoint(resolve_checkpoint_query(checkpoint, &expr.chains).await?)
             }
             Entity::Account(account) => {
                 ExpressionResult::Account(resolve_account_query(account, &expr.chains).await?)

@@ -2220,6 +2220,7 @@ dependencies = [
  "serde_json",
  "serde_with 1.14.0",
  "sui-json-rpc-api",
+ "sui-json-rpc-types",
  "sui-sdk",
  "sui-types",
  "thiserror 1.0.69",
