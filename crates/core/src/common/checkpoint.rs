@@ -342,10 +342,10 @@ impl CheckpointRange {
 
     pub async fn resolve_checkpoint_numbers(&self, provider: &SuiClient) -> Result<Vec<u64>> {
         let (start_block, end_block) = self.range();
-        let start_block_number = get_block_number_from_tag(provider, &start_block).await?;
+        let start_block_number = get_checkpoint_number_from_tag(provider, &start_block).await?;
 
         let end_block_number = match end_block {
-            Some(end) => Some(get_block_number_from_tag(provider, &end).await?),
+            Some(end) => Some(get_checkpoint_number_from_tag(provider, &end).await?),
             None => None,
         };
 
@@ -386,7 +386,7 @@ impl Display for CheckpointRange {
     }
 }
 
-pub async fn get_block_number_from_tag(
+pub async fn get_checkpoint_number_from_tag(
     provider: &SuiClient,
     number_or_tag: &CheckpointNumberOrTag,
 ) -> Result<u64> {
