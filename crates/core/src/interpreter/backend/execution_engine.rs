@@ -1,6 +1,6 @@
 use super::{
-    resolve_account::resolve_account_query, resolve_block::resolve_block_query,
-    resolve_logs::resolve_log_query, resolve_transaction::resolve_transaction_query,
+    resolve_account::resolve_account_query, resolve_checkpoint::resolve_block_query,
+    resolve_transaction::resolve_transaction_query,
 };
 use crate::common::{
     entity::Entity,
@@ -43,14 +43,15 @@ impl ExecutionEngine {
     async fn run_get_expr(&self, expr: &GetExpression) -> Result<ExpressionResult> {
         let result = match &expr.entity {
             Entity::Checkpoint(block) => {
-                ExpressionResult::(resolve_block_query(block, &expr.chains).await?)
+                ExpressionResult::Checkpoint(resolve_block_query(block, &expr.chains).await?)
             }
             Entity::Account(account) => {
                 ExpressionResult::Account(resolve_account_query(account, &expr.chains).await?)
             }
             Entity::Transaction(transaction) => ExpressionResult::Transaction(
                 resolve_transaction_query(transaction, &expr.chains).await?,
-            )
+            ),
+            Entity::Coin(coin) => todo!(),
         };
 
         if let Some(dump) = &expr.dump {
