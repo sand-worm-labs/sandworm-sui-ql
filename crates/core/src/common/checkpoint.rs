@@ -8,7 +8,8 @@ use std::{
     fmt::{self, Display, Formatter},
     str::FromStr,
 };
-use sui_sdk::SuiClient;
+use sui_sdk::{rpc_types::CheckpointedObjectID, SuiClient};
+use sui_json_rpc_types::{CheckpointId as SuiCheckpointId};
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointNumberOrTagError {
@@ -25,27 +26,29 @@ pub enum CheckpointNumberOrTag {
 
 impl CheckpointNumberOrTag {
     /// Returns the numeric block number if explicitly set
-    pub const fn as_number(&self) -> Option<u64> {
+    pub fn as_number(&self) -> Option<u64> {
         match *self {
             Self::Number(num) => Some(num),
             _ => None,
         }
     }
 
-    /// Returns `true` if a numeric block number is set
-    pub const fn is_number(&self) -> bool {
+    pub fn is_number(&self) -> bool {
         matches!(self, Self::Number(_))
     }
 
-    /// Returns `true` if it's "latest"
-    pub const fn is_latest(&self) -> bool {
+    pub fn is_latest(&self) -> bool {
         matches!(self, Self::Latest)
     }
 
-    /// Returns `true` if it's "earliest"
-    pub const fn is_earliest(&self) -> bool {
+    pub fn is_earliest(&self) -> bool {
         matches!(self, Self::Earliest)
     }
+
+    pub fn to_sui_checkpoint_id(&self) -> Option<SuiCheckpointId> {
+       self.as_number().map(SuiCheckpointId::SequenceNumber)
+    }
+
 }
 
 impl From<u64> for CheckpointNumberOrTag {
@@ -78,6 +81,31 @@ impl FromStr for CheckpointNumberOrTag {
         }
     }
 }
+
+impl serde::Serialize for CheckpointNumberOrTag{
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+          match *self {
+            Self::Number(x) => serializer.serialize_str(&format!("0x{x:x}")),
+            Self::Latest => serializer.serialize_str("latest"),
+            Self::Earliest => serializer.serialize_str("earliest"),
+
+        }
+    }
+}
+
+
+impl<'de> serde::Deserialize<'de> for CheckpointNumberOrTag {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?.to_lowercase();
+        s.parse().map_err(serde::de::Error::custom)
+    }
+}
+
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointError {
@@ -255,7 +283,6 @@ pub enum CheckpointFieldError {
     InvalidCheckpointField(String),
 }
 
-// TODO: should include nonce, transactions and withdrawals
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, EnumVariants)]
 pub enum CheckpointField {
     Epoch,
@@ -264,12 +291,14 @@ pub enum CheckpointField {
     NetworkTotalTransactions,
     PreviousDigest,
     Timestamp,
-    TransactionCount,
+    Transactions,
     ValidatorSignature,
     Chain,
-    EpochGasCostSummary,
+    ComputationCost,
+    StorageCost,
+    StorageRebate,
+    NonRefundableStorageFee,
 }
-
 impl Display for CheckpointField {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -279,10 +308,13 @@ impl Display for CheckpointField {
             CheckpointField::NetworkTotalTransactions => write!(f, "network_total_transactions"),
             CheckpointField::PreviousDigest => write!(f, "previous_digest"),
             CheckpointField::Timestamp => write!(f, "timestamp"),
-            CheckpointField::TransactionCount => write!(f, "transaction_count"),
+            CheckpointField::Transactions => write!(f, "transactions"),
             CheckpointField::ValidatorSignature => write!(f, "validator_signature"),
             CheckpointField::Chain => write!(f, "chain"),
-            CheckpointField::EpochGasCostSummary => write!(f, "epoch_gas_cost_summary"),
+            CheckpointField::ComputationCost => write!(f, "computation_cost"),
+            CheckpointField::StorageCost => write!(f, "storage_cost"),
+            CheckpointField::StorageRebate => write!(f, "storage_rebate"),
+            CheckpointField::NonRefundableStorageFee => write!(f, "non_refundable_storage_fee"),
         }
     }
 }
@@ -298,16 +330,20 @@ impl TryFrom<&str> for CheckpointField {
             "network_total_transactions" => Ok(CheckpointField::NetworkTotalTransactions),
             "previous_digest" => Ok(CheckpointField::PreviousDigest),
             "timestamp" => Ok(CheckpointField::Timestamp),
-            "transaction_count" => Ok(CheckpointField::TransactionCount),
+            "transactions" => Ok(CheckpointField::Transactions),
             "validator_signature" => Ok(CheckpointField::ValidatorSignature),
             "chain" => Ok(CheckpointField::Chain),
-            "epoch_gas_cost_summary" => Ok(CheckpointField::EpochGasCostSummary),
+            "computation_cost" => Ok(CheckpointField::ComputationCost),
+            "storage_cost" => Ok(CheckpointField::StorageCost),
+            "storage_rebate" => Ok(CheckpointField::StorageRebate),
+            "non_refundable_storage_fee" => Ok(CheckpointField::NonRefundableStorageFee),
             invalid_field => Err(CheckpointFieldError::InvalidCheckpointField(
                 invalid_field.to_string(),
             )),
         }
     }
 }
+
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointRangeError {
