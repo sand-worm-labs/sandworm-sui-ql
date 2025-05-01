@@ -65,20 +65,20 @@ impl Transaction {
     pub fn filter(&self, tx: &TransactionQueryRes) -> bool {
         if let Some(filters) = &self.filters {
             filters.iter().all(|filter| match filter {
-                TransactionFilter::Kind(t) => t.compare(&tx.r#kind.unwrap()),
-                TransactionFilter::Hash(h) => todo!(),
+                TransactionFilter::Kind(t) => t.compare(&tx.kind.clone().unwrap()),
+                TransactionFilter::Hash(k) => todo!(),
                 TransactionFilter::CheckpointId(_) => true,
                 TransactionFilter::Sender(k) => k.compare(&tx.sender.unwrap()),
-                TransactionFilter::Recipient(equality_filter) => todo!(),
-                TransactionFilter::GasBudget(filter_type) => todo!(),
-                TransactionFilter::GasPrice(filter_type) => todo!(),
-                TransactionFilter::GasUsed(filter_type) => todo!(),
-                TransactionFilter::Status(equality_filter) => todo!(),
-                TransactionFilter::ExecutedEpoch(filter_type) => todo!(),
-                TransactionFilter::Checkpoint(filter_type) => todo!(),
-                TransactionFilter::TimestampMs(filter_type) => todo!(),
-                TransactionFilter::EventCount(filter_type) => todo!(),
-                TransactionFilter::SignatureScheme(equality_filter) => todo!(),
+                TransactionFilter::Recipient(l) => todo!(),
+                TransactionFilter::GasBudget(m) => todo!(),
+                TransactionFilter::GasPrice(n) => todo!(),
+                TransactionFilter::GasUsed(o) => todo!(),
+                TransactionFilter::Status(p) => todo!(),
+                TransactionFilter::ExecutedEpoch(q) => todo!(),
+                TransactionFilter::Checkpoint(r) => todo!(),
+                TransactionFilter::TimestampMs(s) => todo!(),
+                TransactionFilter::EventCount(u) => todo!(),
+                TransactionFilter::SignatureScheme(v) => todo!(),
             })
         } else {
             true
@@ -422,14 +422,6 @@ impl TransactionFilter {
                 |s| s.parse::<u64>().unwrap(),
                 TransactionFilter::TimestampMs,
             ),
-            Rule::data_filter_type => {
-                // let mut inner_pair = pair.into_inner();
-                // let operator = inner_pair.next().unwrap();
-                // let value = TransactionData::from_str(inner_pair.as_str()).unwrap();
-                // let result = EqualityFilter::try_from((operator, value)).unwrap();
-
-                // Ok(TransactionFilter::Data(result))
-            }
             _ => Err(TransactionFilterError::InvalidTransactionFilterProperty(
                 pair.as_str().to_string(),
             )),

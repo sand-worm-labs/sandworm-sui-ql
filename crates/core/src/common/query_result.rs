@@ -92,7 +92,7 @@ impl Default for AccountQueryRes {
 }
 
 #[serde_with::skip_serializing_none]
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Eq,  Deserialize, Clone)]
 pub struct TransactionQueryRes {
     pub chain: Option<Chain>,
     pub r#kind: Option<String>,
