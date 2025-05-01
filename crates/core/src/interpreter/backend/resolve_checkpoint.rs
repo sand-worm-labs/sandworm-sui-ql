@@ -13,7 +13,6 @@ use sui_json_rpc_types::Checkpoint as RpcCheckpoint;
 use sui_sdk::{SuiClient, SuiClientBuilder};
 use sui_types::digests::CheckpointDigest;
 
-
 #[derive(Debug, Serialize, Deserialize, thiserror::Error)]
 pub enum CheckpointResolverErrors {
     #[error("Unable to fetch block number for tag {0}")]
@@ -54,7 +53,7 @@ pub async fn resolve_checkpoint_query(
         let fields = checkpoints.fields().clone();
 
         let chain_future = async move {
-            let provider =  SuiClientBuilder::default().build(chain.rpc_url()?).await?;
+            let provider = SuiClientBuilder::default().build(chain.rpc_url()?).await?;
             let chain = chain.to_chain().await?;
             let mut all_checkpoint_futures = Vec::new();
 
@@ -65,7 +64,8 @@ pub async fn resolve_checkpoint_query(
 
                 let checkpoint_id = resolve_checkpoint_id(&id, &provider_clone).await?;
                 let checkpoint_future = async move {
-                    get_filtered_checkpoints(checkpoint_id,fields, &provider_clone, &chain_clone).await
+                    get_filtered_checkpoints(checkpoint_id, fields, &provider_clone, &chain_clone)
+                        .await
                 };
                 all_checkpoint_futures.push(checkpoint_future);
             }
@@ -120,11 +120,7 @@ pub async fn batch_get_checkpoints(
 
     for checkpoint_number in checkpoint_numbers {
         let checkpoint_future = async move {
-            get_checkpoint(
-                CheckpointNumberOrTag::Number(checkpoint_number),
-                provider
-            )
-            .await
+            get_checkpoint(CheckpointNumberOrTag::Number(checkpoint_number), provider).await
         };
         checkpoin_futures.push(checkpoint_future);
     }
@@ -137,11 +133,17 @@ pub async fn get_checkpoint(
     checkpoint_id: CheckpointNumberOrTag,
     provider: &SuiClient,
 ) -> Result<RpcCheckpoint> {
-    let sui_checkpoint_id = checkpoint_id.to_sui_checkpoint_id().ok_or(CheckpointResolverErrors::UnableToFetchCheckpointNumber(checkpoint_id.clone()))?;
-    let checkpoint = provider.read_api().get_checkpoint(sui_checkpoint_id).await.map_err(|_|{
-        CheckpointResolverErrors::UnableToFetchCheckpointNumber(checkpoint_id.clone())
-    })?;
-    Ok(checkpoint) 
+    let sui_checkpoint_id = checkpoint_id.to_sui_checkpoint_id().ok_or(
+        CheckpointResolverErrors::UnableToFetchCheckpointNumber(checkpoint_id.clone()),
+    )?;
+    let checkpoint = provider
+        .read_api()
+        .get_checkpoint(sui_checkpoint_id)
+        .await
+        .map_err(|_| {
+            CheckpointResolverErrors::UnableToFetchCheckpointNumber(checkpoint_id.clone())
+        })?;
+    Ok(checkpoint)
 }
 
 fn filter_fields(
@@ -154,45 +156,54 @@ fn filter_fields(
     for field in fields {
         match field {
             CheckpointField::Timestamp => {
-                                result.timestamp = Some(checkpoint.timestamp_ms);
-                            }
+                result.timestamp = Some(checkpoint.timestamp_ms);
+            }
             CheckpointField::Number => {
-                                result.number = Some(checkpoint.sequence_number);
-                            }
+                result.number = Some(checkpoint.sequence_number);
+            }
             CheckpointField::Transactions => {
-                                result.transactions = Some(checkpoint.transactions.len());
-                            }
+                result.transactions = Some(checkpoint.transactions.len());
+            }
             CheckpointField::Epoch => {
-                                result.epoch = Some(checkpoint.epoch);
-                            }
+                result.epoch = Some(checkpoint.epoch);
+            }
             CheckpointField::Digest => {
-                                result.digest = Some(checkpoint.digest.base58_encode());
-                            }
+                result.digest = Some(checkpoint.digest.base58_encode());
+            }
             CheckpointField::ComputationCost => {
-                                result.computation_cost = Some(checkpoint.epoch_rolling_gas_cost_summary.storage_cost);
-                            }
+                result.computation_cost =
+                    Some(checkpoint.epoch_rolling_gas_cost_summary.storage_cost);
+            }
             CheckpointField::StorageCost => {
-                            result.storage_cost = Some(checkpoint.epoch_rolling_gas_cost_summary.storage_cost);
-            },
+                result.storage_cost = Some(checkpoint.epoch_rolling_gas_cost_summary.storage_cost);
+            }
             CheckpointField::StorageRebate => {
-                            result.storage_rebate = Some(checkpoint.epoch_rolling_gas_cost_summary.storage_rebate);
-            },
+                result.storage_rebate =
+                    Some(checkpoint.epoch_rolling_gas_cost_summary.storage_rebate);
+            }
             CheckpointField::NonRefundableStorageFee => {
-                result.non_refundable_storage_fee = Some(checkpoint.epoch_rolling_gas_cost_summary.non_refundable_storage_fee);
-            },
+                result.non_refundable_storage_fee = Some(
+                    checkpoint
+                        .epoch_rolling_gas_cost_summary
+                        .non_refundable_storage_fee,
+                );
+            }
             CheckpointField::PreviousDigest => {
-                                let previous_digest = checkpoint.previous_digest.unwrap_or(CheckpointDigest::default()).base58_encode();
-                                result.previous_digest = Some(previous_digest);
-                            }
+                let previous_digest = checkpoint
+                    .previous_digest
+                    .unwrap_or(CheckpointDigest::default())
+                    .base58_encode();
+                result.previous_digest = Some(previous_digest);
+            }
             CheckpointField::ValidatorSignature => {
-                                result.validator_signature = Some(checkpoint.validator_signature.to_string());
-                            }
+                result.validator_signature = Some(checkpoint.validator_signature.to_string());
+            }
             CheckpointField::Chain => {
-                                result.chain = Some(chain.clone());
-                            }
+                result.chain = Some(chain.clone());
+            }
             CheckpointField::NetworkTotalTransactions => {
-                                result.network_total_transactions = Some(checkpoint.network_total_transactions);
-                    },
+                result.network_total_transactions = Some(checkpoint.network_total_transactions);
+            }
         }
     }
 
@@ -202,7 +213,7 @@ fn filter_fields(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::{checkpoint::CheckpointRange, chain::Chain};
+    use crate::common::{chain::Chain, checkpoint::CheckpointRange};
 
     #[tokio::test]
     async fn test_error_when_start_block_is_greater_than_end_block() {

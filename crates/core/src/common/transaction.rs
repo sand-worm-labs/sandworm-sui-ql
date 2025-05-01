@@ -9,24 +9,25 @@ use super::{
 use crate::interpreter::frontend::parser::Rule;
 use alloy::{
     hex::FromHexError,
-    primitives::{Address, AddressError, B256, U256},
+    primitives::{Address, AddressError, U256},
 };
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use sui_types::base_types::SuiAddress;
+use sui_types::digests::TransactionDigest;
 
 #[derive(Debug, PartialEq)]
 pub struct Transaction {
-    ids: Option<Vec<B256>>,
+    ids: Option<Vec<TransactionDigest>>,
     filters: Option<Vec<TransactionFilter>>,
     fields: Vec<TransactionField>,
 }
 
 impl Transaction {
     pub fn new(
-        ids: Option<Vec<B256>>,
+        ids: Option<Vec<TransactionDigest>>,
         filters: Option<Vec<TransactionFilter>>,
         fields: Vec<TransactionField>,
     ) -> Self {
@@ -37,7 +38,7 @@ impl Transaction {
         }
     }
 
-    pub fn ids(&self) -> Option<&Vec<B256>> {
+    pub fn ids(&self) -> Option<&Vec<TransactionDigest>> {
         self.ids.as_ref()
     }
 
@@ -64,8 +65,8 @@ impl Transaction {
     pub fn filter(&self, tx: &TransactionQueryRes) -> bool {
         if let Some(filters) = &self.filters {
             filters.iter().all(|filter| match filter {
-                TransactionFilter::Type(t) => t.compare(&tx.r#type.unwrap()),
-                TransactionFilter::Hash(h) => h.compare(&tx.hash.unwrap()),
+                TransactionFilter::Kind(t) => t.compare(&tx.r#kind.unwrap()),
+                TransactionFilter::Hash(h) => todo!(),
                 TransactionFilter::CheckpointId(_) => true,
                 TransactionFilter::Sender(k) => k.compare(&tx.sender.unwrap()),
                 TransactionFilter::Recipient(equality_filter) => todo!(),
@@ -108,13 +109,16 @@ pub enum TransactionError {
     TransactionFieldError(#[from] TransactionFieldError),
     #[error(transparent)]
     TransactionFilterError(#[from] TransactionFilterError),
+
+    #[error("Unknown transaction error: {0}")]
+    Other(#[from] anyhow::Error),
 }
 
 impl TryFrom<Pairs<'_, Rule>> for Transaction {
     type Error = TransactionError;
 
     fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
-        let mut ids: Option<Vec<B256>> = None;
+        let mut ids: Option<Vec<TransactionDigest>> = None;
         let mut filter: Option<Vec<TransactionFilter>> = None;
         let mut fields: Vec<TransactionField> = vec![];
 
@@ -122,9 +126,9 @@ impl TryFrom<Pairs<'_, Rule>> for Transaction {
             match pair.as_rule() {
                 Rule::tx_id => {
                     if let Some(ids) = ids.as_mut() {
-                        ids.push(B256::from_str(pair.as_str())?);
+                        ids.push(TransactionDigest::from_str(pair.as_str())?);
                     } else {
-                        ids = Some(vec![B256::from_str(pair.as_str())?]);
+                        ids = Some(vec![TransactionDigest::from_str(pair.as_str())?]);
                     }
                 }
                 Rule::tx_filter => {
@@ -165,7 +169,7 @@ impl TryFrom<Pairs<'_, Rule>> for Transaction {
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, EnumVariants)]
 pub enum TransactionField {
     Type,
-    Hash,
+    Digest,
     Sender,
     Recipient,
     Data,
@@ -192,7 +196,7 @@ impl std::fmt::Display for TransactionField {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TransactionField::Type => write!(f, "type"),
-            TransactionField::Hash => write!(f, "hash"),
+            TransactionField::Digest => write!(f, "digest"),
             TransactionField::Sender => write!(f, "sender"),
             TransactionField::Recipient => write!(f, "recipient"),
             TransactionField::Data => write!(f, "data"),
@@ -211,8 +215,8 @@ impl std::fmt::Display for TransactionField {
             TransactionField::EventDigests => write!(f, "event_digests"),
             TransactionField::Chain => write!(f, "chain"),
             TransactionField::Signature => write!(f, "signature"),
-            TransactionField::SignatureScheme => todo!(),
-            TransactionField::PublicKey => todo!(),
+            TransactionField::SignatureScheme => write!(f, "signature_scheme"),
+            TransactionField::PublicKey => write!(f, "public_key"),
         }
     }
 }
@@ -229,7 +233,7 @@ impl TryFrom<&str> for TransactionField {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "type" => Ok(TransactionField::Type),
-            "hash" => Ok(TransactionField::Hash),
+            "digest" => Ok(TransactionField::Digest),
             "sender" => Ok(TransactionField::Sender),
             "recipient" => Ok(TransactionField::Recipient),
             "data" => Ok(TransactionField::Data),
@@ -277,11 +281,11 @@ pub enum TransactionFilterError {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum TransactionFilter {
-    Type(EqualityFilter<u8>),
-    Hash(EqualityFilter<B256>),
-    Sender(EqualityFilter<SuiAddress>),
-    Recipient(EqualityFilter<SuiAddress>),
-    GasBudget(FilterType<u128>),
+    Kind(EqualityFilter<String>),
+    Hash(EqualityFilter<TransactionDigest>),
+    Sender(FilterType<SuiAddress>),
+    Recipient(FilterType<SuiAddress>),
+    GasBudget(FilterType<u64>),
     GasPrice(FilterType<u64>),
     GasUsed(FilterType<u64>),
     Status(EqualityFilter<bool>),
@@ -371,38 +375,38 @@ impl TransactionFilter {
             }
             Rule::type_filter_type => Self::parse_equality_filter(
                 pair,
-                |s| s.parse::<u8>().unwrap(),
-                TransactionFilter::Type,
+                |s| s.parse::<String>().unwrap(),
+                TransactionFilter::Kind,
             ),
             Rule::sender_filter_type => Self::parse_filter(
                 pair,
-                |s| U256::from_str(s).unwrap(),
-                TransactionFilter::Value,
+                |s| SuiAddress::from_str(s).unwrap(),
+                TransactionFilter::Sender,
             ),
             Rule::recipient_filter_type => Self::parse_filter(
                 pair,
-                |s| s.parse::<u64>().unwrap(),
-                TransactionFilter::GasLimit,
+                |s| SuiAddress::from_str(s).unwrap(),
+                TransactionFilter::Recipient,
             ),
             Rule::gas_price_filter_type => Self::parse_filter(
                 pair,
-                |s| s.parse::<u128>().unwrap(),
+                |s| s.parse::<u64>().unwrap(),
                 TransactionFilter::GasPrice,
             ),
             Rule::gas_budget_filter_type => Self::parse_filter(
                 pair,
-                |s| s.parse::<u128>().unwrap(),
-                TransactionFilter::MaxFeePerBlobGas,
+                |s| s.parse::<u64>().unwrap(),
+                TransactionFilter::GasBudget,
             ),
             Rule::gas_used_filter_type => Self::parse_filter(
                 pair,
-                |s| s.parse::<u128>().unwrap(),
-                TransactionFilter::MaxFeePerGas,
+                |s| s.parse::<u64>().unwrap(),
+                TransactionFilter::GasUsed,
             ),
             Rule::executed_epoch_filter_type => Self::parse_filter(
                 pair,
-                |s| s.parse::<u128>().unwrap(),
-                TransactionFilter::MaxPriorityFeePerGas,
+                |s| s.parse::<u64>().unwrap(),
+                TransactionFilter::ExecutedEpoch,
             ),
             Rule::status_filter_type => {
                 let mut inner_pair = pair.into_inner();
@@ -413,32 +417,18 @@ impl TransactionFilter {
                     EqualityFilter::try_from((operator, value == "true")).unwrap(),
                 ))
             }
-            Rule::timestamp_ms_filter_type => Self::parse_equality_filter(
+            Rule::timestamp_ms_filter_type => Self::parse_filter(
                 pair,
-                |s| Address::from_str(s).unwrap(),
-                TransactionFilter::From,
-            ),
-            Rule::to_filter_type => Self::parse_equality_filter(
-                pair,
-                |s| Address::from_str(s).unwrap(),
-                TransactionFilter::To,
+                |s| s.parse::<u64>().unwrap(),
+                TransactionFilter::TimestampMs,
             ),
             Rule::data_filter_type => {
-                let mut inner_pair = pair.into_inner();
-                let operator = inner_pair.next().unwrap();
-                let value = alloy::primitives::Bytes::from_str(inner_pair.as_str()).unwrap();
-                let result = EqualityFilter::try_from((operator, value)).unwrap();
+                // let mut inner_pair = pair.into_inner();
+                // let operator = inner_pair.next().unwrap();
+                // let value = TransactionData::from_str(inner_pair.as_str()).unwrap();
+                // let result = EqualityFilter::try_from((operator, value)).unwrap();
 
-                Ok(TransactionFilter::Data(result))
-            }
-            Rule::y_parity_filter_type => {
-                let mut inner_pair = pair.into_inner();
-                let operator = inner_pair.next().unwrap();
-                let value = inner_pair.as_str();
-
-                Ok(TransactionFilter::YParity(
-                    EqualityFilter::try_from((operator, value == "true")).unwrap(),
-                ))
+                // Ok(TransactionFilter::Data(result))
             }
             _ => Err(TransactionFilterError::InvalidTransactionFilterProperty(
                 pair.as_str().to_string(),

@@ -8,8 +8,8 @@ use std::{
     fmt::{self, Display, Formatter},
     str::FromStr,
 };
+use sui_json_rpc_types::CheckpointId as SuiCheckpointId;
 use sui_sdk::{rpc_types::CheckpointedObjectID, SuiClient};
-use sui_json_rpc_types::{CheckpointId as SuiCheckpointId};
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointNumberOrTagError {
@@ -46,9 +46,8 @@ impl CheckpointNumberOrTag {
     }
 
     pub fn to_sui_checkpoint_id(&self) -> Option<SuiCheckpointId> {
-       self.as_number().map(SuiCheckpointId::SequenceNumber)
+        self.as_number().map(SuiCheckpointId::SequenceNumber)
     }
-
 }
 
 impl From<u64> for CheckpointNumberOrTag {
@@ -82,19 +81,18 @@ impl FromStr for CheckpointNumberOrTag {
     }
 }
 
-impl serde::Serialize for CheckpointNumberOrTag{
+impl serde::Serialize for CheckpointNumberOrTag {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
-        S: serde::Serializer {
-          match *self {
+        S: serde::Serializer,
+    {
+        match *self {
             Self::Number(x) => serializer.serialize_str(&format!("0x{x:x}")),
             Self::Latest => serializer.serialize_str("latest"),
             Self::Earliest => serializer.serialize_str("earliest"),
-
         }
     }
 }
-
 
 impl<'de> serde::Deserialize<'de> for CheckpointNumberOrTag {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -105,7 +103,6 @@ impl<'de> serde::Deserialize<'de> for CheckpointNumberOrTag {
         s.parse().map_err(serde::de::Error::custom)
     }
 }
-
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointError {
@@ -343,7 +340,6 @@ impl TryFrom<&str> for CheckpointField {
         }
     }
 }
-
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointRangeError {

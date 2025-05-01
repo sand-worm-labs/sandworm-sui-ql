@@ -1,21 +1,19 @@
-use super::resolve_block::{batch_get_blocks, get_block};
+use super::resolve_checkpoint::{batch_get_checkpoints, get_checkpoint};
 use crate::common::{
-    checkpoint::BlockId,
     chain::ChainOrRpc,
+    checkpoint::CheckpointId,
     query_result::TransactionQueryRes,
     transaction::{Transaction, TransactionField},
-};
-use alloy::{
-    consensus::Transaction as ConsensusTransaction,
-    primitives::FixedBytes,
-    providers::{Provider, ProviderBuilder, RootProvider},
-    rpc::types::{BlockTransactions, Transaction as RpcTransaction},
-    transports::http::{Client, Http},
 };
 use anyhow::{Ok, Result};
 use futures::future::try_join_all;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use sui_json_rpc_types::{
+    SuiTransactionBlockDataAPI, SuiTransactionBlockEffectsAPI,
+    SuiTransactionBlockResponse as RpcTransaction, SuiTransactionBlockResponseOptions,
+};
+use sui_sdk::{SuiClient, SuiClientBuilder};
+use sui_types::digests::TransactionDigest;
 
 #[derive(Debug, Serialize, Deserialize, thiserror::Error)]
 pub enum TransactionResolverErrors {
@@ -38,21 +36,21 @@ pub async fn resolve_transaction_query(
     transaction: &Transaction,
     chains: &[ChainOrRpc],
 ) -> Result<Vec<TransactionQueryRes>> {
-    if !transaction.ids().is_some() && !transaction.has_block_filter() {
+    if !transaction.ids().is_some() && !transaction.has_checkpoint_filter() {
         return Err(TransactionResolverErrors::MissingTransactionHashOrFilter.into());
     }
 
     let mut all_results = Vec::new();
 
     for chain in chains {
-        let provider = Arc::new(ProviderBuilder::new().on_http(chain.rpc_url()?));
+        let provider = SuiClientBuilder::default().build(chain.rpc_url()?).await?;
 
         // Fetch transactions for this chain
         let rpc_transactions = match transaction.ids() {
             Some(ids) => get_transactions_by_ids(ids, &provider).await?,
             None => {
-                let block_id = transaction.get_block_id_filter()?;
-                get_transactions_by_block_id(block_id, &provider).await?
+                let block_id = transaction.get_checkpoint_id_filter()?;
+                get_transactions_by_checkpoint_id(block_id, &provider).await?
             }
         };
 
@@ -74,46 +72,61 @@ pub async fn resolve_transaction_query(
 }
 
 async fn get_transactions_by_ids(
-    ids: &Vec<FixedBytes<32>>,
-    provider: &RootProvider<Http<Client>>,
+    ids: &Vec<TransactionDigest>,
+    provider: &SuiClient,
 ) -> Result<Vec<RpcTransaction>> {
     let mut tx_futures = Vec::new();
     for id in ids {
         let provider = provider.clone();
-        // let tx = provider
-        //     .raw_request("eth_getTransactionByHash".into(), (*id,))
-        //     .await?;
-        let tx_future = async move { provider.get_transaction_by_hash(*id).await };
+        let transation_options = SuiTransactionBlockResponseOptions::new()
+            .with_effects()
+            .with_events();
+        let tx_future = async move {
+            provider
+                .read_api()
+                .get_transaction_with_options(*id, transation_options)
+                .await
+        };
         tx_futures.push(tx_future);
     }
 
     let tx_res = try_join_all(tx_futures).await?;
 
-    Ok(tx_res.into_iter().filter_map(|t| t).collect())
+    Ok(tx_res.into_iter().filter_map(|t| Some(t)).collect())
 }
 
-async fn get_transactions_by_block_id(
-    block_id: &BlockId,
-    provider: &Arc<RootProvider<Http<Client>>>,
+async fn get_transactions_by_checkpoint_id(
+    checkpoint_id: &CheckpointId,
+    provider: &SuiClient,
 ) -> Result<Vec<RpcTransaction>> {
-    match block_id {
-        BlockId::Number(n) => {
-            let block = get_block(n.clone(), provider.clone(), true).await?;
-            match &block.transactions {
-                BlockTransactions::Full(txs) => Ok(txs.clone()),
-                _ => panic!("Block transactions should be full"),
-            }
+    match checkpoint_id {
+        CheckpointId::Number(n) => {
+            let checkpoint = get_checkpoint(n.clone(), provider).await?;
+            let option_transaction = SuiTransactionBlockResponseOptions::new()
+                .with_effects()
+                .with_events();
+            let digests = checkpoint.transactions;
+            let tnx = provider
+                .read_api()
+                .multi_get_transactions_with_options(digests, option_transaction)
+                .await?;
+            Ok(tnx)
         }
-        BlockId::Range(r) => {
-            let block_numbers = r.resolve_block_numbers(provider).await?;
-            let blocks = batch_get_blocks(block_numbers, provider, true).await?;
-            let txs = blocks
-                .iter()
-                .flat_map(|b| match &b.transactions {
-                    BlockTransactions::Full(txs) => txs.clone(),
-                    _ => panic!("Block transactions should be full"),
-                })
-                .collect::<Vec<_>>();
+        CheckpointId::Range(r) => {
+            let checkpoint_numbers = r.resolve_checkpoint_numbers(provider).await?;
+            let checkpoints = batch_get_checkpoints(checkpoint_numbers, provider).await?;
+            let option_transaction = SuiTransactionBlockResponseOptions::new()
+                .with_effects()
+                .with_events();
+            let mut all_digests = Vec::new();
+            for checkpoint in checkpoints {
+                all_digests.extend(checkpoint.transactions);
+            }
+
+            let txs = provider
+                .read_api()
+                .multi_get_transactions_with_options(all_digests, option_transaction)
+                .await?;
 
             Ok(txs)
         }
@@ -123,84 +136,58 @@ async fn get_transactions_by_block_id(
 async fn pick_transaction_fields(
     tx: &RpcTransaction,
     fields: &Vec<TransactionField>,
-    provider: &Arc<RootProvider<Http<Client>>>,
+    provider: &SuiClient,
     chain: &ChainOrRpc,
 ) -> Result<TransactionQueryRes> {
     let mut result = TransactionQueryRes::default();
     let chain = chain.to_chain().await?;
+    let txn_data = tx.transaction.as_ref().map(|t| &t.data);
+    let sender = txn_data.map(|d| d.sender());
+    let gas = txn_data.map(|d| d.gas_data());
+    let total_events = tx.events.as_ref().map_or(0, |e| e.data.len());
+    let kind = tx.transaction.clone().unwrap().data.transaction().name();
+    let executed_epoch = tx.effects.clone().unwrap().executed_epoch();
 
     for field in fields {
         match field {
             TransactionField::Type => {
-                result.r#type = Some(tx.inner.tx_type().into());
+                result.r#kind = Some(kind.to_string());
             }
-            TransactionField::AuthorizationList => {
-                result.authorization_list = tx.inner.authorization_list().map(|a| a.to_vec());
-            }
-            TransactionField::Hash => {
-                result.hash = Some(tx.inner.tx_hash().clone());
-            }
-            TransactionField::From => {
-                result.from = Some(tx.from);
-            }
-            TransactionField::To => {
-                result.to = tx.inner.to().clone();
-            }
-            TransactionField::Data => {
-                result.data = Some(tx.inner.input().clone());
-            }
-            TransactionField::Value => {
-                result.value = Some(tx.inner.value().clone());
+            TransactionField::Digest => {
+                result.digest = Some(tx.digest.clone());
             }
             TransactionField::GasPrice => {
-                result.gas_price = tx.inner.gas_price();
-            }
-            TransactionField::EffectiveGasPrice => {
-                result.effective_gas_price = tx.effective_gas_price;
-            }
-            TransactionField::GasLimit => {
-                result.gas_limit = Some(tx.inner.gas_limit());
+                result.gas_price = gas.map(|g| g.price);
             }
             TransactionField::Status => {
-                match provider
-                    .get_transaction_receipt(tx.inner.tx_hash().clone())
-                    .await?
-                {
-                    Some(receipt) => {
-                        result.status = Some(receipt.status());
-                    }
-                    None => {
-                        result.status = None;
-                    }
-                }
-            }
-            TransactionField::ChainId => {
-                result.chain_id = tx.inner.chain_id();
-            }
-            TransactionField::V => {
-                result.v = Some(tx.inner.signature().v());
-            }
-            TransactionField::R => {
-                result.r = Some(tx.inner.signature().r());
-            }
-            TransactionField::S => {
-                result.s = Some(tx.inner.signature().s());
-            }
-            TransactionField::MaxFeePerBlobGas => {
-                result.max_fee_per_blob_gas = tx.inner.max_fee_per_blob_gas();
-            }
-            TransactionField::MaxFeePerGas => {
-                result.max_fee_per_gas = Some(tx.inner.max_fee_per_gas());
-            }
-            TransactionField::MaxPriorityFeePerGas => {
-                result.max_priority_fee_per_gas = tx.inner.max_priority_fee_per_gas();
-            }
-            TransactionField::YParity => {
-                result.y_parity = Some(tx.inner.signature().v());
+                result.status = tx.confirmed_local_execution;
             }
             TransactionField::Chain => {
                 result.chain = Some(chain.clone());
             }
+            TransactionField::Sender => {
+                result.sender = sender.copied();
+            }
+            TransactionField::GasBudget => {
+                result.gas_budget = gas.map(|g| g.budget);
+            }
+            TransactionField::GasUsed => {
+                result.gas_used = Some(0);
+            }
+            TransactionField::ExecutedEpoch => {
+                result.executed_epoch = Some(executed_epoch);
+            }
+            TransactionField::Checkpoint => {
+                result.checkpoint = tx.checkpoint;
+            }
+            TransactionField::TimestampMs => {
+                result.timestamp_ms = tx.timestamp_ms;
+            }
+            TransactionField::TotalEvents => {
+                result.total_events = Some(total_events);
+            }
+            // Implement the rest or use `todo!()`:
+            _ => todo!("Field {:?} not yet implemented", field),
         }
     }
 
