@@ -1,5 +1,5 @@
 [package]
-name = "cli"
+name = "sui_ql_cli"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -7,3 +7,14 @@ rust-version.workspace = true
 authors.workspace = true
 
 [dependencies]
+sui_ql_core = { workspace = true }
+clap = { version = "4.5.7", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+tabled = "0.15.0"
+crossterm = "0.27.0"
+csv = "1.1"
+serde = "1"
+
+[[bin]]
+name = "sui-ql"
+path = "src/main.rs"
