@@ -9,7 +9,7 @@ use std::{
     str::FromStr,
 };
 use sui_json_rpc_types::CheckpointId as SuiCheckpointId;
-use sui_sdk::{rpc_types::CheckpointedObjectID, SuiClient};
+use sui_sdk::SuiClient;
 
 #[derive(thiserror::Error, Debug)]
 pub enum CheckpointNumberOrTagError {

@@ -33,7 +33,7 @@ impl Interpreter {
     }
 }
 
-pub async fn eql(source: &str) -> Result<QueryResult> {
+pub async fn suiql(source: &str) -> Result<QueryResult> {
     let result = Interpreter::run_program(source).await?;
 
     match result.first() {

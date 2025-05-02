@@ -96,6 +96,7 @@ impl Default for AccountQueryRes {
 pub struct TransactionQueryRes {
     pub chain: Option<Chain>,
     pub r#kind: Option<String>,
+    pub recepient: Option<SuiAddress>,
     pub digest: Option<TransactionDigest>,
     pub sender: Option<SuiAddress>,
     pub to: Option<SuiAddress>,
@@ -133,6 +134,7 @@ impl Default for TransactionQueryRes {
             total_events: None,
             data: None,
             executed_epoch: None,
+            recepient: None,
         }
     }
 }
@@ -155,6 +157,7 @@ impl TransactionQueryRes {
             || self.timestamp_ms.is_some()
             || self.total_events.is_some()
             || self.data.is_some()
+            || self.recepient.is_some()
             || self.executed_epoch.is_some()
     }
 

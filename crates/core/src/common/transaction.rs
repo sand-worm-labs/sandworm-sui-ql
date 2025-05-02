@@ -69,15 +69,15 @@ impl Transaction {
                 TransactionFilter::Hash(k) => todo!(),
                 TransactionFilter::CheckpointId(_) => true,
                 TransactionFilter::Sender(k) => k.compare(&tx.sender.unwrap()),
-                TransactionFilter::Recipient(l) => todo!(),
-                TransactionFilter::GasBudget(m) => todo!(),
-                TransactionFilter::GasPrice(n) => todo!(),
-                TransactionFilter::GasUsed(o) => todo!(),
-                TransactionFilter::Status(p) => todo!(),
-                TransactionFilter::ExecutedEpoch(q) => todo!(),
-                TransactionFilter::Checkpoint(r) => todo!(),
-                TransactionFilter::TimestampMs(s) => todo!(),
-                TransactionFilter::EventCount(u) => todo!(),
+                TransactionFilter::Recipient(l) => l.compare(&tx.recepient.unwrap()),
+                TransactionFilter::GasBudget(m) => m.compare(&tx.gas_budget.unwrap()),
+                TransactionFilter::GasPrice(n) => n.compare(&tx.gas_price.unwrap()),
+                TransactionFilter::GasUsed(o) => o.compare(&tx.gas_used.unwrap()),
+                TransactionFilter::Status(p) => p.compare(&tx.status.unwrap()),
+                TransactionFilter::ExecutedEpoch(q) => q.compare(&tx.executed_epoch.unwrap()),
+                TransactionFilter::Checkpoint(r) => r.compare(&tx.checkpoint.unwrap()),
+                TransactionFilter::TimestampMs(s) => s.compare(&tx.timestamp_ms.unwrap()),
+                TransactionFilter::EventTotal(u) => u.compare(&tx.total_events.unwrap()),
                 TransactionFilter::SignatureScheme(v) => todo!(),
             })
         } else {
@@ -292,7 +292,7 @@ pub enum TransactionFilter {
     ExecutedEpoch(FilterType<u64>),
     Checkpoint(FilterType<u64>),
     TimestampMs(FilterType<u64>),
-    EventCount(FilterType<u64>), // Number of events emitted
+    EventTotal(FilterType<usize>), // Number of events emitted
     SignatureScheme(EqualityFilter<u8>),
     CheckpointId(CheckpointId),
 }
