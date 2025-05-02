@@ -1,14 +1,17 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+use sui_ql_core::interpreter::suiql as sul_interpreter;
+use wasm_bindgen::prelude::*;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[wasm_bindgen]
+pub async fn suiql(program: &str) -> Result<JsValue, JsValue> {
+    let result = sul_interpreter(program).await;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    match result {
+        Ok(result) => {
+            let result = serde_wasm_bindgen::to_value(&result)?;
+            return Ok(result);
+        }
+        Err(e) => {
+            return Err(JsValue::from_str(&e.to_string()));
+        }
     }
 }

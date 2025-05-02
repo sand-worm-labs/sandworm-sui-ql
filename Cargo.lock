@@ -7557,6 +7557,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-wasm-bindgen"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8302e169f0eddcc139c70f139d19d6467353af16f9fce27e8c30158036a1e16b"
+dependencies = [
+ "js-sys",
+ "serde",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "serde_bytes"
 version = "0.11.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8586,10 +8597,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sui_macros"
-version = "0.0.1"
-
-[[package]]
 name = "sui_ql_cli"
 version = "0.0.1"
 dependencies = [
@@ -9615,6 +9622,16 @@ dependencies = [
 [[package]]
 name = "wasm"
 version = "0.0.1"
+dependencies = [
+ "getrandom 0.2.16",
+ "mio 0.8.11",
+ "serde-wasm-bindgen",
+ "sui_ql_core",
+ "thiserror 1.0.69",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+]
 
 [[package]]
 name = "wasm-bindgen"
