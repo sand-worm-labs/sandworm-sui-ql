@@ -1,9 +1,0 @@
-[package]
-name = "sui_macros"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-rust-version.workspace = true
-authors.workspace = true
-
-[dependencies]
