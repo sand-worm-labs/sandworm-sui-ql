@@ -7,8 +7,7 @@ rust-version.workspace = true
 authors.workspace = true
 
 [dependencies]
-alloy = { version = "0.6.4", features = ["std", "contract", "provider-http", "network", "rpc-types"] }
-alloy-eip7702 = "0.4.1"
+url = "2.5" 
 pest = "2.7.10"
 pest_derive = "2.6"
 tokio = { version = "1", features = ["macros", "rt"] }
