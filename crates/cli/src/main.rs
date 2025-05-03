@@ -3,12 +3,12 @@ mod repl;
 use crate::repl::Repl;
 use clap::{Parser, Subcommand};
 use csv::ReaderBuilder;
+use serde::Serialize;
+use std::error::Error;
 use sui_ql_core::{
     common::query_result::{ExpressionResult, QueryResult},
     interpreter::Interpreter,
 };
-use serde::Serialize;
-use std::error::Error;
 use tabled::{builder::Builder, settings::Style, Table};
 
 #[derive(Parser)]

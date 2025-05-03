@@ -6,11 +6,11 @@ use crossterm::{
     style::{Print, Stylize},
     terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
 };
+use std::io::{stdout, Stdout, Write};
 use sui_ql_core::{
     common::query_result::{ExpressionResult, QueryResult},
     interpreter::Interpreter,
 };
-use std::io::{stdout, Stdout, Write};
 
 static REPL_LABEL: &str = "SUI_QL >";
 
