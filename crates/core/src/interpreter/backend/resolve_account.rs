@@ -7,6 +7,7 @@ use crate::common::{
 use anyhow::Result;
 use futures::future::try_join_all;
 use serde::{Deserialize, Serialize};
+use sui_json_rpc_types::StakeStatus;
 use sui_sdk::{SuiClient, SuiClientBuilder};
 use sui_types::base_types::SuiAddress;
 
@@ -61,6 +62,19 @@ async fn get_account(
 ) -> Result<AccountQueryRes> {
     let mut account = AccountQueryRes::default();
     let chain = chain.to_chain().await?;
+    let stakes = provider
+        .governance_api()
+        .get_stakes(*address)
+        .await
+        .unwrap()
+        .into_iter()
+        .flat_map(|v| v.stakes);
+    let active_delegations = stakes
+        .clone()
+        .filter(|s| matches!(s.status, StakeStatus::Active { .. }))
+        .count();
+    let t: u128 = stakes.map(|s| s.principal as u128).sum();
+    let coins = provider.coin_read_api().get_all_balances(*address).await.unwrap().len();
 
     for field in &fields {
         match field {
@@ -77,17 +91,14 @@ async fn get_account(
             AccountField::Chain => {
                 account.chain = Some(chain.clone());
             }
-            AccountField::CoinOwned => {  
-                account.coin_owned = Some(0);
+            AccountField::CoinOwned => {
+                account.coin_owned = Some(coins);
             }
             AccountField::StakedAmount => {
-                account.staked_amount = Some(0);
+                account.staked_amount = Some(t);
             }
             AccountField::ActiveDelegations => {
-                account.active_delegations = Some(0);
-            }
-            AccountField::NftsOwned => {
-                account.nfts_owned = Some(0);
+                account.active_delegations = Some(active_delegations);
             }
         }
     }

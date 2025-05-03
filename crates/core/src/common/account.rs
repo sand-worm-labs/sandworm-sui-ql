@@ -137,7 +137,6 @@ pub enum AccountField {
     StakedAmount,
     ActiveDelegations,
     Chain,
-    NftsOwned,
 }
 
 impl Display for AccountField {
@@ -149,7 +148,6 @@ impl Display for AccountField {
             AccountField::StakedAmount => write!(f, "stake_amount"),
             AccountField::ActiveDelegations => write!(f, "active_delegations"),
             AccountField::Chain => write!(f, "chain"),
-            AccountField::NftsOwned => write!(f, "nfts_owned"),
         }
     }
 }
@@ -179,7 +177,6 @@ impl TryFrom<&str> for AccountField {
             "stake_amount" => Ok(AccountField::StakedAmount),
             "active_delegations" => Ok(AccountField::ActiveDelegations),
             "chain" => Ok(AccountField::Chain),
-            "nfts_owned" => Ok(AccountField::NftsOwned),
             invalid_field => Err(AccountFieldError::InvalidField(invalid_field.to_string())),
         }
     }
