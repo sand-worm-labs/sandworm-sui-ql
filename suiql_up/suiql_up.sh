@@ -70,11 +70,11 @@ remove_old_version() {
 
 clone_chains_file_if_needed() {
     if [ ! -f ~/sui-ql-config.json ]; then
-        echo "[INFO] Cloning default EQL config file to ~/sui-ql-config.json"
+        echo "[INFO] Cloning default SUI-QL config file to ~/sui-ql-config.json"
         curl -L -s -o sui-ql-config.json $CONFIG_FILE_URL
         mv sui-ql-config.json ~/sui-ql-config.json
     else
-        echo "[INFO] EQL config file already exists. Skipping"
+        echo "[INFO] SUI-QL config file already exists. Skipping"
     fi
 }
 
