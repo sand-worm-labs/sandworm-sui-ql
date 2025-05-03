@@ -4,7 +4,7 @@ use super::{
     entity::{Entity, EntityError},
 };
 use crate::interpreter::frontend::parser::Rule;
-use alloy::transports::http::reqwest::Url;
+use url::Url;
 use pest::iterators::Pairs;
 
 #[derive(Debug, PartialEq)]

@@ -1,182 +1,153 @@
 program = _{SOI ~ (get){1, } ~ silent_eoi}
 
-get       = {
-    entity ~
-    WHITESPACE* ~
-    "ON" ~
-    WHITESPACE* ~
-    (chain_selector | rpc_url) ~
-    (WHITESPACE* ~ dump)* ~
-    exp_separator* ~
-    WHITESPACE*
+get = {
+    entity ~ WHITESPACE* ~ "ON" ~ WHITESPACE* ~ (chain_selector | rpc_url) ~ (WHITESPACE* ~ dump)* ~ exp_separator* ~ WHITESPACE*
 }
 
-entity = { account_get | checkpoint_get | tx_get  }
+entity = { account_get | checkpoint_get | tx_get }
 
 account_get = {
-    "SELECT" ~
-    WHITESPACE* ~
-    account_fields ~
-    WHITESPACE* ~
-    "FROM" ~
-    WHITESPACE* ~
-    "account" ~
-    WHITESPACE* ~
-    (account_id_list | account_filter_list)
+    "SELECT" ~ WHITESPACE* ~ account_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "account" ~ WHITESPACE* ~ (account_id_list | account_filter_list)
 }
 
 checkpoint_get = {
-    "SELECT" ~
-    WHITESPACE* ~
-    checkpoint_fields ~
-    WHITESPACE* ~
-    "FROM" ~
-    WHITESPACE* ~
-    "checkpoint" ~
-    WHITESPACE* ~
-    (checkpoint_id_list | checkpoint_filter_list)
+    "SELECT" ~ WHITESPACE* ~ checkpoint_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "checkpoint" ~ WHITESPACE* ~ (checkpoint_id_list | checkpoint_filter_list)
 }
 
 tx_get = {
-    "SELECT" ~
-    WHITESPACE* ~
-    tx_fields ~
-    WHITESPACE* ~
-    "FROM" ~
-    WHITESPACE* ~
-    "tx" ~
-    WHITESPACE* ~
-    (tx_id_list | tx_filter_list)
+    "SELECT" ~ WHITESPACE* ~ tx_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "tx" ~ WHITESPACE* ~ (tx_id_list | tx_filter_list)
 }
 
-
-account_fields = { (wildcard | account_field_list) }
+account_fields    = { (wildcard | account_field_list) }
 checkpoint_fields = { (wildcard | checkpoint_field_list) }
-tx_fields = { (wildcard | tx_field_list) }
+tx_fields         = { (wildcard | tx_field_list) }
 
 // Account
 account_field_list = _{ account_field ~ ("," ~ WHITESPACE* ~ account_field)* }
-account_field = {
-    "address" |
-    "sui_balance" |
-    "object_count" |
-    "coin_count" |
-    "latest_transaction_id" |
-    "latest_transaction_time" |
-    "stake_amount" |
-    "active_delegations" |
-    "chain" |
-    "nfts_owned" |
-    "transaction_count"
+account_field      =  {
+    "address"
+  | "sui_balance"
+  | "object_count"
+  | "coin_count"
+  | "latest_transaction_id"
+  | "latest_transaction_time"
+  | "stake_amount"
+  | "active_delegations"
+  | "chain"
+  | "nfts_owned"
+  | "transaction_count"
 }
-account_id_list = _{ account_id ~ ("," ~ WHITESPACE* ~ account_id)* }
-account_id = { address | ns }
+account_id_list    = _{ account_id ~ ("," ~ WHITESPACE* ~ account_id)* }
+account_id         =  { address | ns }
 
 account_filter_list = _{ "WHERE" ~ WHITESPACE* ~ account_filter ~ ("," ~ WHITESPACE* ~ account_filter)* }
-account_filter = { address_filter }
+account_filter      =  { address_filter }
 
 // checkpoint
 checkpoint_field_list = _{ checkpoint_field ~ ("," ~ WHITESPACE* ~ checkpoint_field_list)* }
 // TODO: Check if we need uncles
 checkpoint_field = {
-    "epoch" |
-    "number" |
-    "digest" |
-    "network_total_transactions" |
-    "previous_digest" |
-    "timestamp" |
-    "transaction_count" |
-    "validator_signature" |
-    "chain" |
-    "epoch_gas_cost_summary"
+    "chain"
+  | "number"
+  | "timestamp"
+  | "transactions"
+  | "epoch"
+  | "digest"
+  | "previous_digest"
+  | "computation_cost"
+  | "storage_cost"
+  | "storage_rebate"
+  | "non_refundable_storage_fee"
+  | "network_total_transactions"
+  | "validator_signature"
 }
 
-checkpoint_id_list = _{ checkpoint_id ~ ("," ~ WHITESPACE* ~ checkpoint_id)* }
-checkpoint_id = { checkpoint_range | checkpoint_tag_or_number }
-checkpoint_range = { checkpoint_tag_or_number  ~ ":" ~ checkpoint_tag_or_number }
-checkpoint_tag_or_number = { checkpoint_tag | checkpoint_number }
-checkpoint_tag = _{ "latest" | "earliest"  }
-checkpoint_number = _{ integer }
-checkpoint_filter_list = _{ "WHERE" ~ WHITESPACE* ~ checkpoint_filter ~ ("," ~ WHITESPACE* ~ checkpoint_filter)* }
-checkpoint_filter = { checkpointrange_filter }
+checkpoint_id_list       = _{ checkpoint_id ~ ("," ~ WHITESPACE* ~ checkpoint_id)* }
+checkpoint_id            =  { checkpoint_range | checkpoint_tag_or_number }
+checkpoint_range         =  { checkpoint_tag_or_number ~ ":" ~ checkpoint_tag_or_number }
+checkpoint_tag_or_number =  { checkpoint_tag | checkpoint_number }
+checkpoint_tag           = _{ "latest" | "earliest" }
+checkpoint_number        = _{ integer }
+checkpoint_filter_list   = _{ "WHERE" ~ WHITESPACE* ~ checkpoint_filter ~ ("," ~ WHITESPACE* ~ checkpoint_filter)* }
+checkpoint_filter        =  { checkpointrange_filter }
 
 // Transaction
 tx_field_list = _{ tx_field ~ ("," ~ WHITESPACE* ~ tx_field)* }
-tx_field = {
-    "type" |
-    "hash" |
-    "sender" |
-    "recipient" |
-    "data" |
-    "gas_budget" |
-    "gas_price" |
-    "gas_used" |
-    "status" |
-    "executed_epoch" |
-    "checkpoint" |
-    "timestamp_ms" |
-    "total_events" |
-    "event_digests" |
-    "raw_transaction" |
-    "total_object_changes" |
-    "transaction_kind" |
-    "version" |
-    "signature_scheme" |
-    "public_key" |
-    "signature"
+tx_field      =  {
+    "type"
+  | "hash"
+  | "sender"
+  | "recipient"
+  | "data"
+  | "gas_budget"
+  | "gas_price"
+  | "gas_used"
+  | "status"
+  | "executed_epoch"
+  | "checkpoint"
+  | "timestamp_ms"
+  | "total_events"
+  | "event_digests"
+  | "raw_transaction"
+  | "total_object_changes"
+  | "transaction_kind"
+  | "version"
+  | "signature_scheme"
+  | "public_key"
+  | "signature"
 }
 
 tx_id_list = _{ tx_id ~ ("," ~ WHITESPACE* ~ tx_id)* }
-tx_id = { hash }
+tx_id      =  { hash }
 
 // Transaction filters
 tx_filter_list = _{ "WHERE" ~ WHITESPACE* ~ tx_filter ~ ("," ~ WHITESPACE* ~ tx_filter)* }
-tx_filter = {
-    type_filter |
-    sender_filter |
-    recipient_filter |
-    data_filter |
-    gas_budget_filter |
-    gas_price_filter |
-    gas_used_filter |
-    status_filter |
-    executed_epoch_filter |
-    checkpoint_filter |
-    timestamp_ms_filter
+tx_filter      =  {
+    type_filter
+  | sender_filter
+  | recipient_filter
+  | data_filter
+  | gas_budget_filter
+  | gas_price_filter
+  | gas_used_filter
+  | status_filter
+  | executed_epoch_filter
+  | checkpoint_filter
+  | timestamp_ms_filter
 }
 
 // Define the filter types
-type_filter_type = { equality_operators ~ number }
-sender_filter_type = { equality_operators ~ address }
-recipient_filter_type = { equality_operators ~ address }
-data_filter_type = { equality_operators ~ hex_string }
-gas_budget_filter_type = { all_operators ~ number }
-gas_price_filter_type = { all_operators ~ number }
-gas_used_filter_type = { all_operators ~ number }
-status_filter_type = { equality_operators ~ boolean }
+type_filter_type           = { equality_operators ~ number }
+sender_filter_type         = { equality_operators ~ address }
+recipient_filter_type      = { equality_operators ~ address }
+data_filter_type           = { equality_operators ~ hex_string }
+gas_budget_filter_type     = { all_operators ~ number }
+gas_price_filter_type      = { all_operators ~ number }
+gas_used_filter_type       = { all_operators ~ number }
+status_filter_type         = { equality_operators ~ boolean }
 executed_epoch_filter_type = { all_operators ~ number }
-checkpoint_filter_type = { all_operators ~ number }
-timestamp_ms_filter_type = { all_operators ~ number }
+checkpoint_filter_type     = { all_operators ~ number }
+timestamp_ms_filter_type   = { all_operators ~ number }
 
 // Map the filters
-type_filter = _{ "type" ~ type_filter_type }
-sender_filter = _{ "sender" ~ sender_filter_type }
-recipient_filter = _{ "recipient" ~ recipient_filter_type }
-data_filter = _{ "data" ~ data_filter_type }
-gas_budget_filter = _{ "gas_budget" ~ gas_budget_filter_type }
-gas_price_filter = _{ "gas_price" ~ gas_price_filter_type }
-gas_used_filter = _{ "gas_used" ~ gas_used_filter_type }
-status_filter = _{ "status" ~ status_filter_type }
+type_filter           = _{ "type" ~ type_filter_type }
+sender_filter         = _{ "sender" ~ sender_filter_type }
+recipient_filter      = _{ "recipient" ~ recipient_filter_type }
+data_filter           = _{ "data" ~ data_filter_type }
+gas_budget_filter     = _{ "gas_budget" ~ gas_budget_filter_type }
+gas_price_filter      = _{ "gas_price" ~ gas_price_filter_type }
+gas_used_filter       = _{ "gas_used" ~ gas_used_filter_type }
+status_filter         = _{ "status" ~ status_filter_type }
 executed_epoch_filter = _{ "executed_epoch" ~ executed_epoch_filter_type }
-//checkpoint_filter = _{ "checkpoint" ~ checkpoint_filter_type }
+// checkpoint_filter = _{ "checkpoint" ~ checkpoint_filter_type }
 timestamp_ms_filter = _{ "timestamp_ms" ~ timestamp_ms_filter_type }
 
 // Common filters
 checkpointrange_filter_type = { eq_operator ~ checkpoint_id }
-checkpointrange_filter = {"checkpoint" ~ checkpointrange_filter_type}
+checkpointrange_filter      = { "checkpoint" ~ checkpointrange_filter_type }
 
-address_filter_type = { equality_operators ~ address }
-address_filter = _{ "address" ~ address_filter_type}
+address_filter_type =  { equality_operators ~ address }
+address_filter      = _{ "address" ~ address_filter_type }
 
 dump        = { ">>" ~ WHITESPACE* ~ file_name ~ "." ~ file_format }
 file_name   = { (ASCII_ALPHANUMERIC | "-" | "_" | "/")+ }

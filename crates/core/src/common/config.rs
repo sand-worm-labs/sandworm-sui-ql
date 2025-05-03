@@ -1,5 +1,5 @@
 use super::chain::Chain;
-use alloy::transports::http::reqwest::Url;
+use url::Url;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

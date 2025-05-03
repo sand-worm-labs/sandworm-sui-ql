@@ -1,5 +1,5 @@
 use crate::common::chain::Chain;
-use alloy::primitives::{Address, Bloom, Bytes, FixedBytes, B256, U256};
+//use alloy::primitives::{Address, Bloom, Bytes, FixedBytes, B256, U256};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize, Serializer};
 use sui_types::base_types::SuiAddress;
@@ -70,10 +70,10 @@ impl Default for CheckpointQueryRes {
 pub struct AccountQueryRes {
     pub chain: Option<Chain>,
     pub sui_balance: Option<u128>,
-    pub coin_owned: Option<u8>,
-    pub staked_amount: Option<u8>,
+    pub coin_owned: Option<usize>,
+    pub staked_amount: Option<u128>,
     pub address: Option<SuiAddress>,
-    pub active_delegations: Option<u8>,
+    pub active_delegations: Option<usize>,
     pub nfts_owned: Option<u8>,
 }
 
@@ -92,7 +92,7 @@ impl Default for AccountQueryRes {
 }
 
 #[serde_with::skip_serializing_none]
-#[derive(Debug, PartialEq, Eq,  Deserialize, Clone)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Clone)]
 pub struct TransactionQueryRes {
     pub chain: Option<Chain>,
     pub r#kind: Option<String>,
@@ -110,8 +110,7 @@ pub struct TransactionQueryRes {
     pub checkpoint: Option<u64>,
     pub status: Option<bool>,
     pub timestamp_ms: Option<u64>,
-    pub total_events: Option<usize>,
-    pub data: Option<Bytes>,
+    pub total_events: Option<usize>
 }
 
 impl Default for TransactionQueryRes {
@@ -132,7 +131,6 @@ impl Default for TransactionQueryRes {
             status: None,
             timestamp_ms: None,
             total_events: None,
-            data: None,
             executed_epoch: None,
             recepient: None,
         }
@@ -156,7 +154,6 @@ impl TransactionQueryRes {
             || self.status.is_some()
             || self.timestamp_ms.is_some()
             || self.total_events.is_some()
-            || self.data.is_some()
             || self.recepient.is_some()
             || self.executed_epoch.is_some()
     }
@@ -208,9 +205,6 @@ impl TransactionQueryRes {
         if let Some(total_events) = self.total_events {
             fields.push(("total_events", total_events.to_string()));
         }
-        if let Some(data) = &self.data {
-            fields.push(("data", format!("{data:?}")));
-        }
         fields
     }
 }
@@ -229,76 +223,76 @@ impl Serialize for TransactionQueryRes {
     }
 }
 
-#[serde_with::skip_serializing_none]
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
-pub struct LogQueryRes {
-    pub chain: Option<Chain>,
-    pub address: Option<Address>,
-    pub topic0: Option<FixedBytes<32>>,
-    pub topic1: Option<FixedBytes<32>>,
-    pub topic2: Option<FixedBytes<32>>,
-    pub topic3: Option<FixedBytes<32>>,
-    pub data: Option<Bytes>,
-    pub block_hash: Option<B256>,
-    pub block_number: Option<u64>,
-    pub block_timestamp: Option<u64>,
-    pub transaction_hash: Option<B256>,
-    pub transaction_index: Option<u64>,
-    pub log_index: Option<u64>,
-    pub removed: Option<bool>,
-}
+// #[serde_with::skip_serializing_none]
+// #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+// pub struct LogQueryRes {
+//     pub chain: Option<Chain>,
+//     pub address: Option<Address>,
+//     pub topic0: Option<FixedBytes<32>>,
+//     pub topic1: Option<FixedBytes<32>>,
+//     pub topic2: Option<FixedBytes<32>>,
+//     pub topic3: Option<FixedBytes<32>>,
+//     pub data: Option<Bytes>,
+//     pub block_hash: Option<B256>,
+//     pub block_number: Option<u64>,
+//     pub block_timestamp: Option<u64>,
+//     pub transaction_hash: Option<B256>,
+//     pub transaction_index: Option<u64>,
+//     pub log_index: Option<u64>,
+//     pub removed: Option<bool>,
+// }
 
-impl Default for LogQueryRes {
-    fn default() -> Self {
-        Self {
-            chain: None,
-            address: None,
-            topic0: None,
-            topic1: None,
-            topic2: None,
-            topic3: None,
-            data: None,
-            block_hash: None,
-            block_number: None,
-            block_timestamp: None,
-            transaction_hash: None,
-            transaction_index: None,
-            log_index: None,
-            removed: None,
-        }
-    }
-}
+// impl Default for LogQueryRes {
+//     fn default() -> Self {
+//         Self {
+//             chain: None,
+//             address: None,
+//             topic0: None,
+//             topic1: None,
+//             topic2: None,
+//             topic3: None,
+//             data: None,
+//             block_hash: None,
+//             block_number: None,
+//             block_timestamp: None,
+//             transaction_hash: None,
+//             transaction_index: None,
+//             log_index: None,
+//             removed: None,
+//         }
+//     }
+// }
 
-fn serialize_option_u256<S>(option: &Option<U256>, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    match option {
-        Some(u256) => serializer.serialize_some(&u256.to_string()),
-        None => serializer.serialize_none(),
-    }
-}
+// fn serialize_option_u256<S>(option: &Option<U256>, serializer: S) -> Result<S::Ok, S::Error>
+// where
+//     S: Serializer,
+// {
+//     match option {
+//         Some(u256) => serializer.serialize_some(&u256.to_string()),
+//         None => serializer.serialize_none(),
+//     }
+// }
 
-#[cfg(test)]
-mod test {
-    use std::str::FromStr;
+// #[cfg(test)]
+// mod test {
+//     use std::str::FromStr;
 
-    use super::serialize_option_u256;
-    use alloy::primitives::U256;
-    use serde::Serialize;
-    use serde_json::json;
+//     use super::serialize_option_u256;
+//     use alloy::primitives::U256;
+//     use serde::Serialize;
+//     use serde_json::json;
 
-    #[derive(Serialize)]
-    struct U256Serializable {
-        #[serde(serialize_with = "serialize_option_u256")]
-        pub value: Option<U256>,
-    }
+//     #[derive(Serialize)]
+//     struct U256Serializable {
+//         #[serde(serialize_with = "serialize_option_u256")]
+//         pub value: Option<U256>,
+//     }
 
-    #[test]
-    fn test_u256_serialization() {
-        let value = U256::from_str("100").expect("Unable to parse value to U256");
-        let u256 = U256Serializable { value: Some(value) };
-        let u256_str = json!(u256).to_string();
-        assert_eq!("{\"value\":\"100\"}", u256_str);
-    }
-}
+//     #[test]
+//     fn test_u256_serialization() {
+//         let value = U256::from_str("100").expect("Unable to parse value to U256");
+//         let u256 = U256Serializable { value: Some(value) };
+//         let u256_str = json!(u256).to_string();
+//         assert_eq!("{\"value\":\"100\"}", u256_str);
+//     }
+// }

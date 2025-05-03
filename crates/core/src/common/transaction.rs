@@ -7,10 +7,6 @@ use super::{
     query_result::TransactionQueryRes,
 };
 use crate::interpreter::frontend::parser::Rule;
-use alloy::{
-    hex::FromHexError,
-    primitives::{Address, AddressError, U256},
-};
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
@@ -59,7 +55,7 @@ impl Transaction {
                     .find(|f| matches!(f, TransactionFilter::CheckpointId(_)))
                     .and_then(|filter| filter.as_checkpoint_id().ok())
             })
-            .ok_or(TransactionFilterError::InvalidBlockIdFilter)
+            .ok_or(TransactionFilterError::InvalidCheckpointIdFilter)
     }
 
     pub fn filter(&self, tx: &TransactionQueryRes) -> bool {
@@ -101,10 +97,6 @@ pub enum TransactionError {
     UnexpectedToken(String),
     #[error(transparent)]
     EntityIdError(#[from] EntityIdError),
-    #[error(transparent)]
-    FromHexError(#[from] FromHexError),
-    #[error(transparent)]
-    AddressError(#[from] AddressError),
     #[error(transparent)]
     TransactionFieldError(#[from] TransactionFieldError),
     #[error(transparent)]
@@ -269,10 +261,8 @@ pub enum TransactionFilterError {
     MissingOperator,
     #[error(transparent)]
     EntityIdError(#[from] EntityIdError),
-    #[error(transparent)]
-    FromHexError(#[from] FromHexError),
-    #[error("BlockId filter is not valid")]
-    InvalidBlockIdFilter,
+    #[error("CheckpointId filter is not valid")]
+    InvalidCheckpointIdFilter,
     #[error(transparent)]
     ComparisonFilterError(#[from] ComparisonFilterError),
     #[error(transparent)]
@@ -302,7 +292,7 @@ impl TransactionFilter {
         if let TransactionFilter::CheckpointId(checkpoint_id) = self {
             Ok(checkpoint_id)
         } else {
-            Err(TransactionFilterError::InvalidBlockIdFilter)
+            Err(TransactionFilterError::InvalidCheckpointIdFilter)
         }
     }
 
@@ -356,7 +346,7 @@ impl TransactionFilter {
             Rule::checkpointrange_filter => {
                 let range = pair
                     .as_str()
-                    .trim_start_matches("checkpoint ")
+                    .trim_start_matches("checkpoint")
                     .trim_start_matches(|c: char| c.is_whitespace() || c == '=')
                     .trim();
 
@@ -422,9 +412,12 @@ impl TransactionFilter {
                 |s| s.parse::<u64>().unwrap(),
                 TransactionFilter::TimestampMs,
             ),
-            _ => Err(TransactionFilterError::InvalidTransactionFilterProperty(
+            _ => {
+            println!("pair f: {:?}", pair);
+              return     Err(TransactionFilterError::InvalidTransactionFilterProperty(
                 pair.as_str().to_string(),
-            )),
+            ));
+        },
         }
     }
 }

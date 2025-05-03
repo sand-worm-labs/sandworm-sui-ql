@@ -1,6 +1,6 @@
 use super::config::Config;
 use crate::interpreter::frontend::parser::Rule;
-use alloy::transports::http::reqwest::Url;
+use url::Url;
 use anyhow::Result;
 use core::fmt;
 use eql_macros::EnumVariants;

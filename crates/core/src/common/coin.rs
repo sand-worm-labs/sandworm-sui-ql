@@ -1,6 +1,5 @@
 // use super::ens::NameOrAddress;
 // use crate::interpreter::frontend::parser::Rule;
-use alloy::hex::FromHexError;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
@@ -19,10 +18,7 @@ pub enum CoinError {
     CoinFieldError(#[from] CoinFieldError),
 
     #[error(transparent)]
-    CoinFilterError(#[from] CoinFilterError),
-
-    #[error(transparent)]
-    FromHexError(#[from] FromHexError),
+    CoinFilterError(#[from] CoinFilterError), 
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -106,9 +102,7 @@ impl Coin {
 pub enum CoinFilterError {
     #[error("Unexpected token {0} for Coin filter")]
     UnexpectedToken(String),
-
-    #[error(transparent)]
-    FromHexError(#[from] FromHexError),
+    
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -165,9 +159,6 @@ impl Display for CoinField {
 pub enum CoinFieldError {
     #[error("Invalid field for entity Coin: {0}")]
     InvalidField(String),
-
-    #[error(transparent)]
-    FromHexError(#[from] FromHexError),
 }
 
 // impl<'a> TryFrom<Pair<'a, Rule>> for CoinField {
