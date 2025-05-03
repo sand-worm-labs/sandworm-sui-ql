@@ -193,7 +193,7 @@ chain      =  {
   | "devnet"
 }
 rpc_url    =  { ("http://" | "https://") ~ (ASCII_ALPHANUMERIC | "." | "-" | ":" | "/")+ }
-address    =  { "0x" ~ (ASCII_HEX_DIGIT){40} }
+address    =  { "0x" ~ (ASCII_HEX_DIGIT){64} }
 hash       =  { "0x" ~ (ASCII_HEX_DIGIT){64} }
 hex_string =  { "0x" ~ ASCII_HEX_DIGIT{1, } }
 ns         =  { (ASCII_ALPHANUMERIC)+ ~ ".sui" }

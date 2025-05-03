@@ -107,7 +107,7 @@ impl FromStr for NameOrAddress {
             return Ok(Self::Name(s.to_string()));
         }
 
-        if s.len() == 42 && s.starts_with("0x") {
+        if s.len() == 66 && s.starts_with("0x") {
             match SuiAddress::from_str(s) {
                 Ok(addr) => return Ok(Self::Address(addr)),
                 Err(_) => {}
