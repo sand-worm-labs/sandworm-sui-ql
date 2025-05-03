@@ -1,0 +1,22 @@
+{
+  "chains": {
+    "mainnet": {
+      "default": "https://fullnode.mainnet.sui.io",
+      "rpcs": [
+        "https://fullnode.mainnet.sui.io"
+      ]
+    },
+    "testnet": {
+      "default": "https://fullnode.testnet.sui.io",
+      "rpcs": [
+        "https://fullnode.testnet.sui.io"
+      ]
+    },
+    "devnet": {
+      "default": "https://fullnode.devnet.sui.io",
+      "rpcs": [
+        "https://fullnode.devnet.sui.io"
+      ]
+    }
+  }
+}
