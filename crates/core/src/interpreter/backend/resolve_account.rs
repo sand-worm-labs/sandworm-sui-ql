@@ -77,14 +77,7 @@ async fn get_account(
             AccountField::Chain => {
                 account.chain = Some(chain.clone());
             }
-            AccountField::CoinOwned => {
-                // if let Ok(coins) = provider
-                //     .coin_read_api()
-                //     .get_all_coins(*address, None, Some(200))
-                //     .await
-                // {
-                //     account.coin_owned = Some(coins.has_next_page as u64);
-                // }
+            AccountField::CoinOwned => {  
                 account.coin_owned = Some(0);
             }
             AccountField::StakedAmount => {
