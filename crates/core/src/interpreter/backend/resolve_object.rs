@@ -1,8 +1,9 @@
 use crate::common::{
     account::{Account, AccountField},
     chain::ChainOrRpc,
+    coin::CoinField,
     name_services::NameOrAddress,
-    query_result::AccountQueryRes,
+    query_result::{AccountQueryRes, CoinQueryRes},
 };
 use anyhow::Result;
 use futures::future::try_join_all;
@@ -19,7 +20,7 @@ pub enum AccountResolverErrors {
 
 /// Resolve the query to get accounts after receiving an account entity expression
 /// Iterate through entity_ids and map them to a futures list. Execute all futures concurrently and collect the results.
-pub async fn resolve_account_query(
+pub async fn resolve_coin_query(
     account: &Account,
     chains: &[ChainOrRpc],
 ) -> Result<Vec<AccountQueryRes>> {
@@ -54,65 +55,25 @@ pub async fn resolve_account_query(
     Ok(account_res)
 }
 
-async fn get_account(
+async fn get_coin(
     address: &SuiAddress,
-    fields: Vec<AccountField>,
+    fields: Vec<CoinField>,
     provider: &SuiClient,
     chain: &ChainOrRpc,
-) -> Result<AccountQueryRes> {
-    let mut account = AccountQueryRes::default();
+) -> Result<CoinQueryRes> {
+    let mut coin = CoinQueryRes::default();
     let chain = chain.to_chain().await?;
-    let stakes = provider
-        .governance_api()
-        .get_stakes(*address)
-        .await
-        .unwrap()
-        .into_iter()
-        .flat_map(|v| v.stakes);
-    let active_delegations = stakes
-        .clone()
-        .filter(|s| matches!(s.status, StakeStatus::Active { .. }))
-        .count();
-    let t: u128 = stakes.map(|s| s.principal as u128).sum();
-    let coins = provider
-        .coin_read_api()
-        .get_all_balances(*address)
-        .await
-        .unwrap()
-        .len();
 
     for field in &fields {
         match field {
-            AccountField::SuiBalance => {
-                if let Ok(balance) = provider.coin_read_api().get_balance(*address, None).await {
-                    account.sui_balance = Some(balance.total_balance);
-                } else {
-                    account.sui_balance = None;
-                }
-            }
-            AccountField::Address => {
-                account.address = Some(*address);
-            }
-            AccountField::Chain => {
-                account.chain = Some(chain.clone());
-            }
-            AccountField::CoinOwned => {
-                account.coin_owned = Some(coins);
-            }
-            AccountField::StakedAmount => {
-                account.staked_amount = Some(t);
-            }
-            AccountField::ActiveDelegations => {
-                account.active_delegations = Some(active_delegations);
-            }
+            CoinField::Decimals => todo!(),
+            CoinField::Name => todo!(),
+            CoinField::Symbol => todo!(),
+            CoinField::Description => todo!(),
+            CoinField::IconUrl => todo!(),
+            CoinField::Chain => todo!(),
         }
     }
 
-    Ok(account)
-}
-
-async fn to_address(name: &String) -> Result<SuiAddress> {
-    let provider = SuiClientBuilder::default().build_mainnet().await.unwrap();
-    let address = NameOrAddress::Name(name.clone()).resolve(&provider).await?;
-    Ok(address)
+    Ok(coin)
 }

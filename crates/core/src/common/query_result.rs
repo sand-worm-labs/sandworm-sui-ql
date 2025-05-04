@@ -24,6 +24,8 @@ pub enum ExpressionResult {
     Checkpoint(Vec<CheckpointQueryRes>),
     #[serde(rename = "transaction")]
     Transaction(Vec<TransactionQueryRes>),
+    #[serde(rename = "coin")]
+    Coin(Vec<CoinQueryRes>),
 }
 
 // TODO: should this be replaced with Alloy's Block?
@@ -74,7 +76,6 @@ pub struct AccountQueryRes {
     pub staked_amount: Option<u128>,
     pub address: Option<SuiAddress>,
     pub active_delegations: Option<usize>,
-    pub nfts_owned: Option<u8>,
 }
 
 impl Default for AccountQueryRes {
@@ -86,7 +87,32 @@ impl Default for AccountQueryRes {
             staked_amount: None,
             address: None,
             active_delegations: None,
-            nfts_owned: None,
+        }
+    }
+}
+
+#[serde_with::skip_serializing_none]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct CoinQueryRes {
+    pub chain: Option<Chain>,
+    pub id: Option<String>,          // Coin type ID
+    pub name: Option<String>,        // "Usdc"
+    pub symbol: Option<String>,      // "USDC"
+    pub description: Option<String>, // "Stable coin."
+    pub decimals: Option<u8>,        // 9
+    pub icon_url: Option<String>,    // Might be null or Some(url)
+}
+
+impl Default for CoinQueryRes {
+    fn default() -> Self {
+        Self {
+            id: None,
+            name: None,
+            symbol: None,
+            description: None,
+            decimals: None,
+            icon_url: None,
+            chain: None,
         }
     }
 }
@@ -110,7 +136,7 @@ pub struct TransactionQueryRes {
     pub checkpoint: Option<u64>,
     pub status: Option<bool>,
     pub timestamp_ms: Option<u64>,
-    pub total_events: Option<usize>
+    pub total_events: Option<usize>,
 }
 
 impl Default for TransactionQueryRes {

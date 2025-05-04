@@ -101,7 +101,6 @@ pub enum TransactionError {
     TransactionFieldError(#[from] TransactionFieldError),
     #[error(transparent)]
     TransactionFilterError(#[from] TransactionFilterError),
-
     #[error("Unknown transaction error: {0}")]
     Other(#[from] anyhow::Error),
 }
@@ -413,11 +412,11 @@ impl TransactionFilter {
                 TransactionFilter::TimestampMs,
             ),
             _ => {
-            println!("pair f: {:?}", pair);
-              return     Err(TransactionFilterError::InvalidTransactionFilterProperty(
-                pair.as_str().to_string(),
-            ));
-        },
+                println!("pair f: {:?}", pair);
+                return Err(TransactionFilterError::InvalidTransactionFilterProperty(
+                    pair.as_str().to_string(),
+                ));
+            }
         }
     }
 }

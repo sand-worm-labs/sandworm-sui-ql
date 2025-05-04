@@ -24,6 +24,7 @@ pub(crate) fn dump_results(result: &ExpressionResult, dump: &Dump) -> Result<(),
                 ExpressionResult::Account(accounts) => serialize_csv(accounts)?,
                 ExpressionResult::Checkpoint(blocks) => serialize_csv(blocks)?,
                 ExpressionResult::Transaction(txs) => serialize_csv(txs)?,
+                ExpressionResult::Coin(coins) => serialize_csv(coins)?,
             };
 
             std::fs::write(dump.path(), content)?;
@@ -57,6 +58,7 @@ fn serialize_parquet(result: &ExpressionResult) -> Result<Vec<u8>, Box<dyn Error
         ExpressionResult::Transaction(transactions) => {
             create_parquet_schema_and_data(transactions)?
         }
+        ExpressionResult::Coin(coins) => create_parquet_schema_and_data(coins)?,
     };
 
     let batch = RecordBatch::try_new(Arc::new(schema), data)?;
@@ -118,7 +120,6 @@ mod test {
             coin_owned: None,
             staked_amount: Some(0),
             active_delegations: None,
-            nfts_owned: None,
         };
         let result = ExpressionResult::Account(vec![res]);
         let content = serialize_json(&result).unwrap();
@@ -136,7 +137,6 @@ mod test {
                 coin_owned: None,
                 staked_amount: Some(0),
                 active_delegations: None,
-                nfts_owned: None,
             },
             AccountQueryRes {
                 address: None,
@@ -145,7 +145,6 @@ mod test {
                 coin_owned: None,
                 staked_amount: Some(0),
                 active_delegations: None,
-                nfts_owned: None,
             },
         ];
         let content = serialize_csv(&res).unwrap();
@@ -162,7 +161,6 @@ mod test {
             coin_owned: None,
             staked_amount: Some(0),
             active_delegations: None,
-            nfts_owned: None,
         };
         let result = ExpressionResult::Account(vec![res]);
         let content = serialize_parquet(&result).unwrap();

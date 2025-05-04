@@ -1,11 +1,11 @@
 use super::chain::Chain;
-use url::Url;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use url::Url;
 
 const CONFIG_FILE: &str = "sui-ql-config.json";
 

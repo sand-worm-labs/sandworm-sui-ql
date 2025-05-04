@@ -4,8 +4,8 @@ use super::{
     entity::{Entity, EntityError},
 };
 use crate::interpreter::frontend::parser::Rule;
-use url::Url;
 use pest::iterators::Pairs;
+use url::Url;
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {

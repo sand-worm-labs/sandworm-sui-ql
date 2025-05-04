@@ -4,7 +4,7 @@ get = {
     entity ~ WHITESPACE* ~ "ON" ~ WHITESPACE* ~ (chain_selector | rpc_url) ~ (WHITESPACE* ~ dump)* ~ exp_separator* ~ WHITESPACE*
 }
 
-entity = { account_get | checkpoint_get | tx_get }
+entity = { account_get | checkpoint_get | tx_get | coin_get | event_get }
 
 account_get = {
     "SELECT" ~ WHITESPACE* ~ account_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "account" ~ WHITESPACE* ~ (account_id_list | account_filter_list)
@@ -18,9 +18,19 @@ tx_get = {
     "SELECT" ~ WHITESPACE* ~ tx_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "tx" ~ WHITESPACE* ~ (tx_id_list | tx_filter_list)
 }
 
+coin_get = {
+    "SELECT" ~ WHITESPACE* ~ coin_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "coin" ~ WHITESPACE* ~ (coin_id_list | coin_filter_list)
+}
+
+event_get = {
+    "SELECT" ~ WHITESPACE* ~ event_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "event" ~ WHITESPACE* ~ (tx_id_list | tx_filter_list)
+}
+
 account_fields    = { (wildcard | account_field_list) }
 checkpoint_fields = { (wildcard | checkpoint_field_list) }
 tx_fields         = { (wildcard | tx_field_list) }
+coin_fields       = { (wildcard | coin_field_list) }
+event_fields      = { (wildcard | event_field_list) }
 
 // Account
 account_field_list = _{ account_field ~ ("," ~ WHITESPACE* ~ account_field)* }
@@ -45,8 +55,7 @@ account_filter      =  { address_filter }
 
 // checkpoint
 checkpoint_field_list = _{ checkpoint_field ~ ("," ~ WHITESPACE* ~ checkpoint_field_list)* }
-// TODO: Check if we need uncles
-checkpoint_field = {
+checkpoint_field      =  {
     "chain"
   | "number"
   | "timestamp"
@@ -149,6 +158,37 @@ checkpointrange_filter      = { "checkpoint" ~ checkpointrange_filter_type }
 address_filter_type =  { equality_operators ~ address }
 address_filter      = _{ "address" ~ address_filter_type }
 
+event_field_list = _{ event_field ~ ("," ~ WHITESPACE* ~ event_field)* }
+event_field = {
+    "tx_digest"
+  | "event_seq"
+  | "package_id"
+  | "module"
+  | "sender"
+  | "event_type"
+}
+
+coin_id_list = _{ coin_id ~ ("," ~ WHITESPACE* ~ coin_id)* }
+coin_id      =  { move_struct_tag }
+
+coin_filter_list = _{ "WHERE" ~ WHITESPACE* ~ coin_filter ~ ("," ~ WHITESPACE* ~ coin_filter)* }
+coin_filter      =  { move_struct_tag }
+
+move_struct_tag = @{ address ~ "::" ~ module_name ~ "::" ~ type_name }
+
+module_name = { ASCII_ALPHANUMERIC+ }
+type_name   = { ASCII_ALPHANUMERIC+ }
+
+coin_field_list = _{ coin_field ~ ("," ~ WHITESPACE* ~ coin_field)* }
+coin_field      =  {
+    "decimals"
+  | "description"
+  | "iconUrl"
+  | "id"
+  | "name"
+  | "symbol"
+}
+
 dump        = { ">>" ~ WHITESPACE* ~ file_name ~ "." ~ file_format }
 file_name   = { (ASCII_ALPHANUMERIC | "-" | "_" | "/")+ }
 file_format = { "json" | "csv" | "parquet" }
@@ -165,7 +205,7 @@ chain      =  {
 }
 rpc_url    =  { ("http://" | "https://") ~ (ASCII_ALPHANUMERIC | "." | "-" | ":" | "/")+ }
 address    =  { "0x" ~ (ASCII_HEX_DIGIT){64} }
-hash       =  { "0x" ~ (ASCII_HEX_DIGIT){64} }
+hash       =  { (ASCII_ALPHANUMERIC){44} }
 hex_string =  { "0x" ~ ASCII_HEX_DIGIT{1, } }
 ns         =  { (ASCII_ALPHANUMERIC)+ ~ ".sui" }
 boolean    =  { "true" | "false" }
@@ -173,7 +213,6 @@ boolean    =  { "true" | "false" }
 // Sui types
 move_function  = @{ package_id ~ "::" ~ module_name ~ "::" ~ function_name ~ type_arguments? }
 package_id     =  { "0x" ~ ASCII_HEX_DIGIT{1, } }
-module_name    =  { ASCII_ALPHANUMERIC+ }
 function_name  =  { ASCII_ALPHANUMERIC+ }
 type_arguments =  { "<" ~ WHITESPACE* ~ move_type ~ (WHITESPACE* ~ "," ~ WHITESPACE* ~ move_type)* ~ WHITESPACE* ~ ">" }
 
@@ -186,7 +225,6 @@ move_type = {
 primitive_type = { "bool" | "u8" | "u16" | "u32" | "u64" | "u128" | "u256" | "address" }
 vector_type    = { "vector" ~ "<" ~ move_type ~ ">" }
 custom_type    = { module_name ~ "::" ~ type_name }
-type_name      = { ASCII_ALPHANUMERIC+ }
 
 all_operators        = _{ equality_operators | comparison_operators }
 equality_operators   =  { eq_operator | neq_operator }

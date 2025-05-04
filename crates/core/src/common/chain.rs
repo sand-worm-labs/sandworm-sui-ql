@@ -1,12 +1,12 @@
 use super::config::Config;
 use crate::interpreter::frontend::parser::Rule;
-use url::Url;
 use anyhow::Result;
 use core::fmt;
 use eql_macros::EnumVariants;
 use pest::iterators::Pairs;
 use serde::{Deserialize, Serialize};
 use sui_sdk::SuiClientBuilder;
+use url::Url;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ChainOrRpc {
