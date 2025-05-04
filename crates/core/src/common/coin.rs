@@ -1,17 +1,11 @@
-// use super::ens::NameOrAddress;
 use crate::interpreter::frontend::parser::Rule;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
 use std::{
-    fmt::{write, Display},
+    fmt::Display,
     str::FromStr,
 };
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum CoinId {
-    Id(String),
-}
 
 #[derive(thiserror::Error, Debug)]
 pub enum CoinError {
@@ -75,20 +69,21 @@ impl TryFrom<Pairs<'_, Rule>> for Coin {
                     }
 
                     fields = inner_pairs
-                        .map(|pair| CoinField::try_from(pair))
+                        .map(CoinField::try_from)
                         .collect::<Result<Vec<CoinField>, CoinFieldError>>()?;
                 }
                 Rule::coin_id => {
-                    if let Some(id) = id.as_mut() {
-                        id.push(NameOrAddress::from_str(pair.as_str())?);
+                    let val = pair.as_str().to_string();
+                    if let Some(ref mut vec) = id {
+                        vec.push(val);
                     } else {
-                        id = Some(vec![NameOrAddress::from_str(pair.as_str())?]);
+                        id = Some(vec![val]);
                     }
                 }
                 Rule::coin_filter_list => {
                     filter = Some(
                         pair.into_inner()
-                            .map(|pair| CoinFilter::try_from(pair))
+                            .map(CoinFilter::try_from)
                             .collect::<Result<Vec<CoinFilter>, CoinFilterError>>()?,
                     );
                 }
@@ -106,6 +101,9 @@ impl TryFrom<Pairs<'_, Rule>> for Coin {
 pub enum CoinFilterError {
     #[error("Unexpected token {0} for Coin filter")]
     UnexpectedToken(String),
+
+    #[error("Failed to parse coin id: {0}")]
+    CoinParseError(String),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -118,13 +116,11 @@ impl TryFrom<Pair<'_, Rule>> for CoinFilter {
 
     fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         match pair.as_rule() {
-            Rule::address_filter => {
-                let address = NameOrAddress::from_str(pair.as_str())?;
-                Ok(CoinFilter::Address(address))
+            Rule::move_struct_tag => {
+                let id = String::from_str(pair.as_str()).map_err(|e| CoinFilterError::CoinParseError(e.to_string()))?;
+                Ok(CoinFilter::CoinId(id))
             }
-            _ => {
-                return Err(CoinFilterError::UnexpectedToken(pair.as_str().to_string()));
-            }
+            _ => Err(CoinFilterError::UnexpectedToken(pair.as_str().to_string())),
         }
     }
 }
@@ -141,14 +137,15 @@ pub enum CoinField {
 
 impl Display for CoinField {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            CoinField::Name => write!(f, "name"),
-            CoinField::Symbol => write!(f, "symbol"),
-            CoinField::Description => write!(f, "description"),
-            CoinField::IconUrl => write!(f, "icon_url"),
-            CoinField::Chain => write!(f, "chain"),
-            CoinField::Decimals => write!(f, "decimals"),
-        }
+        let s = match self {
+            CoinField::Name => "name",
+            CoinField::Symbol => "symbol",
+            CoinField::Description => "description",
+            CoinField::IconUrl => "icon_url",
+            CoinField::Chain => "chain",
+            CoinField::Decimals => "decimals",
+        };
+        write!(f, "{}", s)
     }
 }
 
