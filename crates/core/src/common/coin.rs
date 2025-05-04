@@ -1,5 +1,5 @@
 // use super::ens::NameOrAddress;
-// use crate::interpreter::frontend::parser::Rule;
+use crate::interpreter::frontend::parser::Rule;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
@@ -7,7 +7,11 @@ use std::{
     fmt::{write, Display},
     str::FromStr,
 };
-use sui_types::base_types::ObjectID;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CoinId {
+    Id(String),
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum CoinError {
@@ -18,26 +22,26 @@ pub enum CoinError {
     CoinFieldError(#[from] CoinFieldError),
 
     #[error(transparent)]
-    CoinFilterError(#[from] CoinFilterError), 
+    CoinFilterError(#[from] CoinFilterError),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Coin {
-    id: Option<Vec<ObjectID>>,
+    id: Option<Vec<String>>,
     filter: Option<Vec<CoinFilter>>,
     fields: Vec<CoinField>,
 }
 
 impl Coin {
     pub fn new(
-        id: Option<Vec<ObjectID>>,
+        id: Option<Vec<String>>,
         filter: Option<Vec<CoinFilter>>,
         fields: Vec<CoinField>,
     ) -> Self {
         Self { id, filter, fields }
     }
 
-    pub fn ids(&self) -> Option<&Vec<ObjectID>> {
+    pub fn ids(&self) -> Option<&Vec<String>> {
         self.id.as_ref()
     }
 
@@ -50,83 +54,80 @@ impl Coin {
     }
 }
 
-// impl TryFrom<Pairs<'_, Rule>> for Coin {
-//     type Error = CoinError;
+impl TryFrom<Pairs<'_, Rule>> for Coin {
+    type Error = CoinError;
 
-//     fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
-//         let mut fields: Vec<CoinField> = vec![];
-//         let mut id: Option<Vec<NameOrAddress>> = None;
-//         let mut filter: Option<Vec<CoinFilter>> = None;
+    fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
+        let mut fields: Vec<CoinField> = vec![];
+        let mut id: Option<Vec<String>> = None;
+        let mut filter: Option<Vec<CoinFilter>> = None;
 
-//         for pair in pairs {
-//             match pair.as_rule() {
-//                 Rule::Coin_fields => {
-//                     let inner_pairs = pair.into_inner();
+        for pair in pairs {
+            match pair.as_rule() {
+                Rule::coin_fields => {
+                    let inner_pairs = pair.into_inner();
 
-//                     if let Some(pair) = inner_pairs.peek() {
-//                         if pair.as_rule() == Rule::wildcard {
-//                             fields = CoinField::all_variants().to_vec();
-//                             continue;
-//                         }
-//                     }
+                    if let Some(pair) = inner_pairs.peek() {
+                        if pair.as_rule() == Rule::wildcard {
+                            fields = CoinField::all_variants().to_vec();
+                            continue;
+                        }
+                    }
 
-//                     fields = inner_pairs
-//                         .map(|pair| CoinField::try_from(pair))
-//                         .collect::<Result<Vec<CoinField>, CoinFieldError>>()?;
-//                 }
-//                 Rule::Coin_id => {
-//                     if let Some(id) = id.as_mut() {
-//                         id.push(NameOrAddress::from_str(pair.as_str())?);
-//                     } else {
-//                         id = Some(vec![NameOrAddress::from_str(pair.as_str())?]);
-//                     }
-//                 }
-//                 Rule::Coin_filter_list => {
-//                     filter = Some(
-//                         pair.into_inner()
-//                             .map(|pair| CoinFilter::try_from(pair))
-//                             .collect::<Result<Vec<CoinFilter>, CoinFilterError>>()?,
-//                     );
-//                 }
-//                 _ => {
-//                     return Err(CoinError::UnexpectedToken(pair.as_str().to_string()));
-//                 }
-//             }
-//         }
+                    fields = inner_pairs
+                        .map(|pair| CoinField::try_from(pair))
+                        .collect::<Result<Vec<CoinField>, CoinFieldError>>()?;
+                }
+                Rule::coin_id => {
+                    if let Some(id) = id.as_mut() {
+                        id.push(NameOrAddress::from_str(pair.as_str())?);
+                    } else {
+                        id = Some(vec![NameOrAddress::from_str(pair.as_str())?]);
+                    }
+                }
+                Rule::coin_filter_list => {
+                    filter = Some(
+                        pair.into_inner()
+                            .map(|pair| CoinFilter::try_from(pair))
+                            .collect::<Result<Vec<CoinFilter>, CoinFilterError>>()?,
+                    );
+                }
+                _ => {
+                    return Err(CoinError::UnexpectedToken(pair.as_str().to_string()));
+                }
+            }
+        }
 
-//         Ok(Coin { id, filter, fields })
-//     }
-// }
+        Ok(Coin { id, filter, fields })
+    }
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum CoinFilterError {
     #[error("Unexpected token {0} for Coin filter")]
     UnexpectedToken(String),
-    
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum CoinFilter {
-    CoinId(ObjectID),
+    CoinId(String),
 }
 
-// impl TryFrom<Pair<'_, Rule>> for CoinFilter {
-//     type Error = CoinFilterError;
+impl TryFrom<Pair<'_, Rule>> for CoinFilter {
+    type Error = CoinFilterError;
 
-//     fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-//         match pair.as_rule() {
-//             Rule::address_filter => {
-//                 let address = NameOrAddress::from_str(pair.as_str())?;
-//                 Ok(CoinFilter::Address(address))
-//             }
-//             _ => {
-//                 return Err(CoinFilterError::UnexpectedToken(
-//                     pair.as_str().to_string(),
-//                 ));
-//             }
-//         }
-//     }
-// }
+    fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        match pair.as_rule() {
+            Rule::address_filter => {
+                let address = NameOrAddress::from_str(pair.as_str())?;
+                Ok(CoinFilter::Address(address))
+            }
+            _ => {
+                return Err(CoinFilterError::UnexpectedToken(pair.as_str().to_string()));
+            }
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, EnumVariants)]
 pub enum CoinField {
@@ -135,8 +136,6 @@ pub enum CoinField {
     Symbol,
     Description,
     IconUrl,
-    CoinType,
-    TotalSupply,
     Chain,
 }
 
@@ -149,8 +148,6 @@ impl Display for CoinField {
             CoinField::IconUrl => write!(f, "icon_url"),
             CoinField::Chain => write!(f, "chain"),
             CoinField::Decimals => write!(f, "decimals"),
-            CoinField::CoinType => write!(f, "coin_type"),
-            CoinField::TotalSupply => write!(f, "total_supply"),
         }
     }
 }
@@ -161,13 +158,13 @@ pub enum CoinFieldError {
     InvalidField(String),
 }
 
-// impl<'a> TryFrom<Pair<'a, Rule>> for CoinField {
-//     type Error = CoinFieldError;
+impl<'a> TryFrom<Pair<'a, Rule>> for CoinField {
+    type Error = CoinFieldError;
 
-//     fn try_from(pair: Pair<'a, Rule>) -> Result<Self, Self::Error> {
-//         CoinField::try_from(pair.as_str())
-//     }
-// }
+    fn try_from(pair: Pair<'a, Rule>) -> Result<Self, Self::Error> {
+        CoinField::try_from(pair.as_str())
+    }
+}
 
 impl TryFrom<&str> for CoinField {
     type Error = CoinFieldError;
@@ -180,8 +177,6 @@ impl TryFrom<&str> for CoinField {
             "icon_url" => Ok(CoinField::IconUrl),
             "chain" => Ok(CoinField::Chain),
             "decimals" => Ok(CoinField::Decimals),
-            "coin_type" => Ok(CoinField::CoinType),
-            "total_supply" => Ok(CoinField::TotalSupply),
             _ => Err(CoinFieldError::InvalidField(value.to_string())),
         }
     }
