@@ -24,6 +24,5 @@ pub async fn resolve_object_query(
     account: &Account,
     chains: &[ChainOrRpc],
 ) -> Result<Vec<AccountQueryRes>> {
-
     Ok([].into())
 }

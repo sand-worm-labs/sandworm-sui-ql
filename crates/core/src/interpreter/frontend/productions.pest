@@ -180,15 +180,14 @@ module_name = { ASCII_ALPHANUMERIC+ }
 type_name   = { ASCII_ALPHANUMERIC+ }
 
 coin_field_list = _{ coin_field ~ ("," ~ WHITESPACE* ~ coin_field)* }
-coin_field      =  {
+coin_field = {
     "decimals"
   | "description"
-  | "iconUrl"
-  | "id"
+  | "icon_url"
   | "name"
   | "symbol"
+  | "chain"
 }
-
 dump        = { ">>" ~ WHITESPACE* ~ file_name ~ "." ~ file_format }
 file_name   = { (ASCII_ALPHANUMERIC | "-" | "_" | "/")+ }
 file_format = { "json" | "csv" | "parquet" }

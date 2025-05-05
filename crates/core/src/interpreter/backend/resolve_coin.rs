@@ -55,10 +55,10 @@ async fn get_coin(
                 coin.symbol = Some(coin_result.symbol.clone());
             }
             CoinField::Description => {
-                coin.symbol = Some(coin_result.description.clone());
+                coin.description = Some(coin_result.description.clone());
             }
             CoinField::IconUrl => {
-                coin.symbol = coin_result.icon_url.clone();
+                coin.icon_url = coin_result.icon_url.clone();
             }
             CoinField::Chain => {
                 coin.chain = Some(chain.clone());
