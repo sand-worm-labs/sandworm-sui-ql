@@ -58,18 +58,17 @@ impl TryFrom<Pairs<'_, Rule>> for Coin {
             match pair.as_rule() {
                 Rule::coin_fields => {
                     let inner_pairs = pair.into_inner();
-
                     if let Some(pair) = inner_pairs.peek() {
                         if pair.as_rule() == Rule::wildcard {
                             fields = CoinField::all_variants().to_vec();
                             continue;
                         }
                     }
-
                     fields = inner_pairs
                         .map(CoinField::try_from)
-                        .collect::<Result<Vec<CoinField>, CoinFieldError>>()?;
+                        .collect::<Result<Vec<_>, _>>()?;
                 }
+
                 Rule::coin_id => {
                     let val = pair.as_str().to_string();
 
@@ -79,17 +78,16 @@ impl TryFrom<Pairs<'_, Rule>> for Coin {
                         id = Some(vec![val]);
                     }
                 }
+
                 Rule::coin_filter_list => {
                     filter = Some(
                         pair.into_inner()
                             .map(CoinFilter::try_from)
-                            .collect::<Result<Vec<CoinFilter>, CoinFilterError>>()?,
+                            .collect::<Result<Vec<_>, _>>()?,
                     );
                 }
-                _ => {
-                    println!("pair: {}", pair.as_str());
-                    return Err(CoinError::UnexpectedToken(pair.as_str().to_string()));
-                }
+
+                _ => return Err(CoinError::UnexpectedToken(pair.as_str().to_string())),
             }
         }
 
@@ -115,10 +113,9 @@ impl TryFrom<Pair<'_, Rule>> for CoinFilter {
     type Error = CoinFilterError;
 
     fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        println!("pair: {}", pair.as_str());
         match pair.as_rule() {
-            Rule::move_struct_tag => {
-                let id = String::from_str(pair.as_str())
+            Rule::coin_id => {
+                let id = String::from_str(pair.into_inner().as_str())
                     .map_err(|e| CoinFilterError::CoinParseError(e.to_string()))?;
                 Ok(CoinFilter::CoinId(id))
             }

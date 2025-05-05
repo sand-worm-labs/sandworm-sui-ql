@@ -62,7 +62,6 @@ impl Transaction {
         if let Some(filters) = &self.filters {
             filters.iter().all(|filter| match filter {
                 TransactionFilter::Kind(t) => t.compare(&tx.kind.clone().unwrap()),
-                TransactionFilter::Hash(k) => todo!(),
                 TransactionFilter::CheckpointId(_) => true,
                 TransactionFilter::Sender(k) => k.compare(&tx.sender.unwrap()),
                 TransactionFilter::Recipient(l) => l.compare(&tx.recepient.unwrap()),
@@ -74,7 +73,6 @@ impl Transaction {
                 TransactionFilter::Checkpoint(r) => r.compare(&tx.checkpoint.unwrap()),
                 TransactionFilter::TimestampMs(s) => s.compare(&tx.timestamp_ms.unwrap()),
                 TransactionFilter::EventTotal(u) => u.compare(&tx.total_events.unwrap()),
-                TransactionFilter::SignatureScheme(v) => todo!(),
             })
         } else {
             true
@@ -271,7 +269,6 @@ pub enum TransactionFilterError {
 #[derive(Debug, PartialEq, Clone)]
 pub enum TransactionFilter {
     Kind(EqualityFilter<String>),
-    Hash(EqualityFilter<TransactionDigest>),
     Sender(FilterType<SuiAddress>),
     Recipient(FilterType<SuiAddress>),
     GasBudget(FilterType<u64>),
@@ -282,7 +279,6 @@ pub enum TransactionFilter {
     Checkpoint(FilterType<u64>),
     TimestampMs(FilterType<u64>),
     EventTotal(FilterType<usize>), // Number of events emitted
-    SignatureScheme(EqualityFilter<u8>),
     CheckpointId(CheckpointId),
 }
 

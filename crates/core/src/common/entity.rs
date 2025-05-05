@@ -54,10 +54,10 @@ impl TryFrom<Pairs<'_, Rule>> for Entity {
                     let tx = Transaction::try_from(pair.into_inner())?;
                     return Ok(Entity::Transaction(tx));
                 }
-                // Rule::coin_get => {
-                //     let coin = Coin::try_from(pair.into_inner())?;
-                //     return Ok(Entity::Coin(coin));
-                // }
+                Rule::coin_get => {
+                    let coin = Coin::try_from(pair.into_inner())?;
+                    return Ok(Entity::Coin(coin));
+                }
                 _ => return Err(EntityError::UnexpectedToken(pair.as_str().to_string())),
             }
         }
