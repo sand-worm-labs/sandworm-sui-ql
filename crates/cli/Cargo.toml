@@ -14,6 +14,8 @@ tabled = "0.15.0"
 crossterm = "0.27.0"
 csv = "1.1"
 serde = "1"
+log = "0.4"
+env_logger = "0.11"
 
 [[bin]]
 name = "sui-ql"

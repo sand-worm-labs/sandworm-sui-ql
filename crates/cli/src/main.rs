@@ -55,8 +55,8 @@ impl ResultHandler {
                 ExpressionResult::Transaction(query_res) => {
                     println!("{}", to_table(query_res)?);
                 }
-                ExpressionResult::Coin(items) => {
-                    println!("{}", to_table(items)?);
+                ExpressionResult::Coin(coins_res) => {
+                    println!("{}", to_table(coins_res)?);
                 }
             }
         }
@@ -95,6 +95,7 @@ pub fn to_table<S: Serialize + core::fmt::Debug>(data: Vec<S>) -> Result<Table, 
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn Error>> {
+    env_logger::init();
     let args = Arguments::parse();
 
     match args.subcmd {
