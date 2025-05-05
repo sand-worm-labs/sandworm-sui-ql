@@ -118,6 +118,37 @@ impl Default for CoinQueryRes {
 }
 
 #[serde_with::skip_serializing_none]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct EventQueryRes {
+    pub chain: Option<Chain>,
+    pub tx_digest: Option<String>,
+    pub event_seq: Option<u64>,
+    pub package_id: Option<String>,
+    pub module: Option<String>,
+    pub sender: Option<String>,
+    pub event_type: Option<String>,
+    pub bcs_encoding: Option<String>,
+    pub bcs: Option<String>,
+}
+
+impl Default for EventQueryRes {
+    fn default() -> Self {
+        Self {
+            chain: None,
+            tx_digest: None,
+            event_seq: None,
+            package_id: None,
+            module: None,
+            sender: None,
+            event_type: None,
+            bcs_encoding: None,
+            bcs: None,
+        }
+    }
+}
+
+
+#[serde_with::skip_serializing_none]
 #[derive(Debug, PartialEq, Eq, Deserialize, Clone)]
 pub struct TransactionQueryRes {
     pub chain: Option<Chain>,

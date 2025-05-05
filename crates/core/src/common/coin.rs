@@ -2,10 +2,7 @@ use crate::interpreter::frontend::parser::Rule;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::Display,
-    str::FromStr,
-};
+use std::{fmt::Display, str::FromStr};
 
 #[derive(thiserror::Error, Debug)]
 pub enum CoinError {
@@ -52,6 +49,7 @@ impl TryFrom<Pairs<'_, Rule>> for Coin {
     type Error = CoinError;
 
     fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
+        println!("pairs: {:#?}", pairs);
         let mut fields: Vec<CoinField> = vec![];
         let mut id: Option<Vec<String>> = None;
         let mut filter: Option<Vec<CoinFilter>> = None;
@@ -74,6 +72,7 @@ impl TryFrom<Pairs<'_, Rule>> for Coin {
                 }
                 Rule::coin_id => {
                     let val = pair.as_str().to_string();
+
                     if let Some(ref mut vec) = id {
                         vec.push(val);
                     } else {
@@ -88,6 +87,7 @@ impl TryFrom<Pairs<'_, Rule>> for Coin {
                     );
                 }
                 _ => {
+                    println!("pair: {}", pair.as_str());
                     return Err(CoinError::UnexpectedToken(pair.as_str().to_string()));
                 }
             }
@@ -115,9 +115,11 @@ impl TryFrom<Pair<'_, Rule>> for CoinFilter {
     type Error = CoinFilterError;
 
     fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        println!("pair: {}", pair.as_str());
         match pair.as_rule() {
             Rule::move_struct_tag => {
-                let id = String::from_str(pair.as_str()).map_err(|e| CoinFilterError::CoinParseError(e.to_string()))?;
+                let id = String::from_str(pair.as_str())
+                    .map_err(|e| CoinFilterError::CoinParseError(e.to_string()))?;
                 Ok(CoinFilter::CoinId(id))
             }
             _ => Err(CoinFilterError::UnexpectedToken(pair.as_str().to_string())),

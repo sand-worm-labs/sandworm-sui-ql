@@ -3,6 +3,8 @@ use crate::interpreter::frontend::parser::Rule;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
+use sui_json_rpc_types::{EventFilter as SuiEventFilter,};
+use sui_types::digests::TransactionDigest;
 use std::{
     fmt::{write, Display},
     str::FromStr,
@@ -73,20 +75,20 @@ impl TryFrom<Pairs<'_, Rule>> for Event {
                         .map(|pair| EventField::try_from(pair))
                         .collect::<Result<Vec<EventField>, EventFieldError>>()?;
                 }
-                Rule::tx_id => {
-                    if let Some(id) = id.as_mut() {
-                        id.push(NameOrAddress::from_str(pair.as_str())?);
-                    } else {
-                        id = Some(vec![NameOrAddress::from_str(pair.as_str())?]);
-                    }
-                }
-                Rule::coin_filter_list => {
-                    filter = Some(
-                        pair.into_inner()
-                            .map(|pair| EventFilter::try_from(pair))
-                            .collect::<Result<Vec<EventFilter>, EventFilterError>>()?,
-                    );
-                }
+                // Rule::tx_id => {
+                //     if let Some(id) = id.as_mut() {
+                //         id.push(NameOrAddress::from_str(pair.as_str())?);
+                //     } else {
+                //         id = Some(vec![NameOrAddress::from_str(pair.as_str())?]);
+                //     }
+                // }
+                // Rule::coin_filter_list => {
+                //     filter = Some(
+                //         pair.into_inner()
+                //             .map(|pair| EventFilter::try_from(pair))
+                //             .collect::<Result<Vec<EventFilter>, EventFilterError>>()?,
+                //     );
+                // }
                 _ => {
                     return Err(EventError::UnexpectedToken(pair.as_str().to_string()));
                 }
@@ -106,23 +108,24 @@ pub enum EventFilterError {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum EventFilter {
     EventId(String),
+    Transaction(TransactionDigest)
 }
 
-impl TryFrom<Pair<'_, Rule>> for EventFilter {
-    type Error = EventFilterError;
+// impl TryFrom<Pair<'_, Rule>> for EventFilter {
+//     type Error = EventFilterError;
 
-    fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
-        match pair.as_rule() {
-            Rule::address_filter => {
-                let address = NameOrAddress::from_str(pair.as_str())?;
-                Ok(EventFilter::Address(address))
-            }
-            _ => {
-                return Err(EventFilterError::UnexpectedToken(pair.as_str().to_string()));
-            }
-        }
-    }
-}
+//     fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+//         match pair.as_rule() {
+//             Rule::address_filter => {
+//                 let address = NameOrAddress::from_str(pair.as_str())?;
+//                 Ok(EventFilter::Address(address))
+//             }
+//             _ => {
+//                 return Err(EventFilterError::UnexpectedToken(pair.as_str().to_string()));
+//             }
+//         }
+//     }
+// }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize, EnumVariants)]
 pub enum EventField {
