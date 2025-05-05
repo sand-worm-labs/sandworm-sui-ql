@@ -55,6 +55,9 @@ impl ResultHandler {
                 ExpressionResult::Transaction(query_res) => {
                     println!("{}", to_table(query_res)?);
                 }
+                ExpressionResult::Coin(items) => {
+                    println!("{}", to_table(items)?);
+                }
             }
         }
 
