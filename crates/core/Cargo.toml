@@ -26,6 +26,9 @@ sui_types = { git = "https://github.com/mystenlabs/sui", package = "sui-types"}
 sui_sdk = { git = "https://github.com/mystenlabs/sui", package = "sui-sdk"}
 sui_json_rpc_api = { git = "https://github.com/mystenlabs/sui", package = "sui-json-rpc-api"}
 sui-json-rpc-types = { git="https://github.com/mystenlabs/sui", package = "sui-json-rpc-types" }
+log = "0.4.27"
+env_logger = "0.11"
+
 [dev-dependencies]
 pretty_assertions = "1"
 pprof = { version = "0.13", features = ["flamegraph", "criterion"] }
