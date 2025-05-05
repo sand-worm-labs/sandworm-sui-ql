@@ -147,7 +147,6 @@ impl Default for EventQueryRes {
     }
 }
 
-
 #[serde_with::skip_serializing_none]
 #[derive(Debug, PartialEq, Eq, Deserialize, Clone)]
 pub struct TransactionQueryRes {

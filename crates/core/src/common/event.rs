@@ -3,12 +3,12 @@ use crate::interpreter::frontend::parser::Rule;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
-use sui_json_rpc_types::{EventFilter as SuiEventFilter,};
-use sui_types::digests::TransactionDigest;
 use std::{
     fmt::{write, Display},
     str::FromStr,
 };
+use sui_json_rpc_types::EventFilter as SuiEventFilter;
+use sui_types::digests::TransactionDigest;
 
 #[derive(thiserror::Error, Debug)]
 pub enum EventError {
@@ -108,7 +108,7 @@ pub enum EventFilterError {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum EventFilter {
     EventId(String),
-    Transaction(TransactionDigest)
+    Transaction(TransactionDigest),
 }
 
 // impl TryFrom<Pair<'_, Rule>> for EventFilter {

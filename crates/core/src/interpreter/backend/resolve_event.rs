@@ -1,5 +1,8 @@
 use crate::common::{
-    chain::ChainOrRpc, event::{Event, EventField}, name_services::NameOrAddress, query_result::{AccountQueryRes, EventQueryRes}
+    chain::ChainOrRpc,
+    event::{Event, EventField},
+    name_services::NameOrAddress,
+    query_result::{AccountQueryRes, EventQueryRes},
 };
 use anyhow::Result;
 use futures::future::try_join_all;
@@ -21,7 +24,7 @@ pub async fn resolve_event_query(
     chains: &[ChainOrRpc],
 ) -> Result<Vec<AccountQueryRes>> {
     let mut all_results = Vec::new();
-    
+
     // for chain in chains {
     //     let provider = SuiClientBuilder::default().build(chain.rpc_url()?).await?;
     //     // provider.event_api().query_events(sui_json_rpc_types::EventFilter::All(()), cursor, limit, descending_order);
