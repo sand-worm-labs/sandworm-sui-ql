@@ -1,6 +1,6 @@
 use super::{
     resolve_account::resolve_account_query, resolve_checkpoint::resolve_checkpoint_query,
-    resolve_coin::resolve_coin_query, resolve_transaction::resolve_transaction_query,
+    resolve_coin::resolve_coin_query, resolve_transaction::resolve_transaction_query,resolve_object::resolve_object_query
 };
 use crate::common::{
     entity::Entity,
@@ -54,6 +54,9 @@ impl ExecutionEngine {
             Entity::Coin(coin) => {
                 ExpressionResult::Coin(resolve_coin_query(coin, &expr.chains).await?)
             }
+            Entity::Object(object) => {
+                ExpressionResult::Object(resolve_object_query(object, &expr.chains).await?)
+            },
         };
 
         if let Some(dump) = &expr.dump {

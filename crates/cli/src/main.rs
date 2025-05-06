@@ -58,6 +58,9 @@ impl ResultHandler {
                 ExpressionResult::Coin(coins_res) => {
                     println!("{}", to_table(coins_res)?);
                 }
+                ExpressionResult::Object(objects_res) => {
+                    println!("{}", to_table(objects_res)?);
+                }
             }
         }
 

@@ -1,9 +1,5 @@
 use crate::common::{
-    account::{Account, AccountField},
-    chain::ChainOrRpc,
-    coin::CoinField,
-    name_services::NameOrAddress,
-    query_result::{AccountQueryRes, CoinQueryRes},
+    account::{Account, AccountField}, chain::ChainOrRpc, coin::CoinField, name_services::NameOrAddress, object::Object, query_result::{CoinQueryRes, ObjectQueryRes}
 };
 use anyhow::Result;
 use futures::future::try_join_all;
@@ -21,8 +17,8 @@ pub enum AccountResolverErrors {
 /// Resolve the query to get accounts after receiving an account entity expression
 /// Iterate through entity_ids and map them to a futures list. Execute all futures concurrently and collect the results.
 pub async fn resolve_object_query(
-    account: &Account,
+    account: &Object,
     chains: &[ChainOrRpc],
-) -> Result<Vec<AccountQueryRes>> {
+) -> Result<Vec<ObjectQueryRes>> {
     Ok([].into())
 }

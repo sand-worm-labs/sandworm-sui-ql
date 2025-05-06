@@ -241,6 +241,12 @@ impl Repl {
                         queue!(stdout(), MoveToNextLine(1), Print(line.magenta())).unwrap();
                     })
                 }
+                ExpressionResult::Object(items) => {
+                    let table = to_table(items)?;
+                    table.to_string().split("\n").for_each(|line| {
+                        queue!(stdout(), MoveToNextLine(1), Print(line.magenta())).unwrap();
+                    })
+                }
             }
         }
 

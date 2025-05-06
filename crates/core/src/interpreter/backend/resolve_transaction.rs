@@ -56,7 +56,7 @@ pub async fn resolve_transaction_query(
 
         let result_futures = rpc_transactions
             .iter()
-            .map(|t| pick_transaction_fields(t, transaction.fields(), &provider, chain));
+            .map(|t| pick_transaction_fields(t, transaction.fields(), chain));
         let tx_res = try_join_all(result_futures).await?;
 
         // Filter and collect results for this chain
@@ -136,7 +136,6 @@ async fn get_transactions_by_checkpoint_id(
 async fn pick_transaction_fields(
     tx: &RpcTransaction,
     fields: &Vec<TransactionField>,
-    provider: &SuiClient,
     chain: &ChainOrRpc,
 ) -> Result<TransactionQueryRes> {
     let mut result = TransactionQueryRes::default();

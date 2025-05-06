@@ -25,6 +25,7 @@ pub(crate) fn dump_results(result: &ExpressionResult, dump: &Dump) -> Result<(),
                 ExpressionResult::Checkpoint(blocks) => serialize_csv(blocks)?,
                 ExpressionResult::Transaction(txs) => serialize_csv(txs)?,
                 ExpressionResult::Coin(coins) => serialize_csv(coins)?,
+                ExpressionResult::Object(object) => serialize_csv(object)?,
             };
 
             std::fs::write(dump.path(), content)?;
@@ -59,6 +60,7 @@ fn serialize_parquet(result: &ExpressionResult) -> Result<Vec<u8>, Box<dyn Error
             create_parquet_schema_and_data(transactions)?
         }
         ExpressionResult::Coin(coins) => create_parquet_schema_and_data(coins)?,
+        ExpressionResult::Object(objects) => create_parquet_schema_and_data(objects)?,
     };
 
     let batch = RecordBatch::try_new(Arc::new(schema), data)?;

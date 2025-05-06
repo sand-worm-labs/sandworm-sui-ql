@@ -26,6 +26,8 @@ pub enum ExpressionResult {
     Transaction(Vec<TransactionQueryRes>),
     #[serde(rename = "coin")]
     Coin(Vec<CoinQueryRes>),
+    #[serde(rename = "object")]
+    Object(Vec<ObjectQueryRes>),
 }
 
 // TODO: should this be replaced with Alloy's Block?
@@ -143,6 +145,32 @@ impl Default for EventQueryRes {
             event_type: None,
             bcs_encoding: None,
             bcs: None,
+        }
+    }
+}
+
+#[serde_with::skip_serializing_none]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct ObjectQueryRes {
+    pub object_id: Option<String>,
+    pub version: Option<String>,
+    pub digest: Option<String>,
+    pub type_: Option<String>,
+    pub owner: Option<SuiAddress>,
+    pub previous_transaction: Option<String>,
+    pub storage_rebate: Option<String>,
+}
+
+impl Default for ObjectQueryRes {
+    fn default() -> Self {
+        Self {
+            object_id: None,
+            version: None,
+            digest: None,
+            type_: None,
+            owner: None,
+            previous_transaction: None,
+            storage_rebate: None,
         }
     }
 }

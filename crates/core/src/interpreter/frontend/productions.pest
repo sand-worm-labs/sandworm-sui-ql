@@ -22,6 +22,10 @@ coin_get = {
     "SELECT" ~ WHITESPACE* ~ coin_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "coin" ~ WHITESPACE* ~ (coin_id_list | coin_filter_list)
 }
 
+object_get = {
+    "SELECT" ~ WHITESPACE* ~ object_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "object" ~ WHITESPACE* ~ (object_id_list | object_filter_list)
+}
+
 event_get = {
     "SELECT" ~ WHITESPACE* ~ event_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "event" ~ WHITESPACE* ~ (tx_id_list | tx_filter_list)
 }
@@ -31,6 +35,7 @@ checkpoint_fields = { (wildcard | checkpoint_field_list) }
 tx_fields         = { (wildcard | tx_field_list) }
 coin_fields       = { (wildcard | coin_field_list) }
 event_fields      = { (wildcard | event_field_list) }
+object_fields      = { (wildcard | object_field_list) }
 
 // Account
 account_field_list = _{ account_field ~ ("," ~ WHITESPACE* ~ account_field)* }
@@ -50,6 +55,17 @@ account_field      =  {
 account_id_list    = _{ account_id ~ ("," ~ WHITESPACE* ~ account_id)* }
 account_id         =  { address | ns }
 
+// object
+object_id_list = _{ object_id ~ ("," ~ WHITESPACE* ~ object_id)* }
+object_id      =  { object }
+
+object_filter_list = _{ "WHERE" ~ WHITESPACE* ~ object_filter ~ ("," ~ WHITESPACE* ~ object_filter)* }
+object_filter      =  { object_filter_template }
+
+object_filter_type =  { equality_operators ~ object }
+object_filter_template      = _{ "object" ~ object_filter_type }
+
+// account
 account_filter_list = _{ "WHERE" ~ WHITESPACE* ~ account_filter ~ ("," ~ WHITESPACE* ~ account_filter)* }
 account_filter      =  { address_filter }
 
@@ -188,6 +204,24 @@ coin_field = {
   | "symbol"
   | "chain"
 }
+
+object_field_list = _{ object_field ~ ("," ~ WHITESPACE* ~ object_field)* }
+object_field = {
+    "objectId"
+  | "version"
+  | "digest"
+  | "type"
+  | "owner"
+  | "previousTransaction"
+  | "storageRebate"
+  | "decimals"
+  | "description"
+  | "icon_url"
+  | "name"
+  | "symbol"
+  | "chain"
+}
+
 dump        = { ">>" ~ WHITESPACE* ~ file_name ~ "." ~ file_format }
 file_name   = { (ASCII_ALPHANUMERIC | "-" | "_" | "/")+ }
 file_format = { "json" | "csv" | "parquet" }
@@ -204,6 +238,7 @@ chain      =  {
 }
 rpc_url    =  { ("http://" | "https://") ~ (ASCII_ALPHANUMERIC | "." | "-" | ":" | "/")+ }
 address    =  { "0x" ~ (ASCII_HEX_DIGIT){64} }
+object     =  { "0x" ~ (ASCII_HEX_DIGIT){64} }
 hash       =  { (ASCII_ALPHANUMERIC){44} }
 hex_string =  { "0x" ~ ASCII_HEX_DIGIT{1, } }
 ns         =  { (ASCII_ALPHANUMERIC)+ ~ ".sui" }
