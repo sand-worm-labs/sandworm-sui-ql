@@ -4,7 +4,7 @@ get = {
     entity ~ WHITESPACE* ~ "ON" ~ WHITESPACE* ~ (chain_selector | rpc_url) ~ (WHITESPACE* ~ dump)* ~ exp_separator* ~ WHITESPACE*
 }
 
-entity = { account_get | checkpoint_get | tx_get | coin_get | event_get }
+entity = { account_get | checkpoint_get | tx_get | coin_get | event_get | object_get }
 
 account_get = {
     "SELECT" ~ WHITESPACE* ~ account_fields ~ WHITESPACE* ~ "FROM" ~ WHITESPACE* ~ "account" ~ WHITESPACE* ~ (account_id_list | account_filter_list)

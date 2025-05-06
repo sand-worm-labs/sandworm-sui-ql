@@ -17,7 +17,7 @@ pub enum AccountResolverErrors {
 /// Resolve the query to get accounts after receiving an account entity expression
 /// Iterate through entity_ids and map them to a futures list. Execute all futures concurrently and collect the results.
 pub async fn resolve_object_query(
-    account: &Object,
+    object: &Object,
     chains: &[ChainOrRpc],
 ) -> Result<Vec<ObjectQueryRes>> {
     Ok([].into())

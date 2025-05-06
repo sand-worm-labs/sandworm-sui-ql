@@ -1,1 +1,1 @@
-SELECT * FROM tx WHERE checkpoint = 45090 ON mainnet
+SELECT * FROM object 0x53e4567ccafa5f36ce84c80aa8bc9be64e0d5ae796884274aef3005ae6733809 ON mainnet
