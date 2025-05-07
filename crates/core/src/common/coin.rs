@@ -49,7 +49,6 @@ impl TryFrom<Pairs<'_, Rule>> for Coin {
     type Error = CoinError;
 
     fn try_from(pairs: Pairs<'_, Rule>) -> Result<Self, Self::Error> {
-        println!("pairs: {:#?}", pairs);
         let mut fields: Vec<CoinField> = vec![];
         let mut id: Option<Vec<String>> = None;
         let mut filter: Option<Vec<CoinFilter>> = None;

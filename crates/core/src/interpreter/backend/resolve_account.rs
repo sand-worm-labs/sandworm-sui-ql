@@ -63,23 +63,21 @@ async fn get_account(
     let mut account = AccountQueryRes::default();
     let chain = chain.to_chain().await?;
     let stakes = provider
-        .governance_api()
-        .get_stakes(*address)
-        .await
-        .unwrap()
-        .into_iter()
-        .flat_map(|v| v.stakes);
-    let active_delegations = stakes
-        .clone()
-        .filter(|s| matches!(s.status, StakeStatus::Active { .. }))
-        .count();
-    let t: u128 = stakes.map(|s| s.principal as u128).sum();
-    let coins = provider
+    .governance_api()
+    .get_stakes(*address)
+    .await?
+    .into_iter()
+    .flat_map(|v| v.stakes);
+
+    let active_delegations = stakes.clone().filter(|s| matches!(s.status, StakeStatus::Active { .. })).count();
+    let total_staked: u128 = stakes.map(|s| s.principal as u128).sum();
+
+    let coin_count = provider
         .coin_read_api()
         .get_all_balances(*address)
-        .await
-        .unwrap()
+        .await?
         .len();
+
 
     for field in &fields {
         match field {
@@ -97,10 +95,10 @@ async fn get_account(
                 account.chain = Some(chain.clone());
             }
             AccountField::CoinOwned => {
-                account.coin_owned = Some(coins);
+                account.coin_owned = Some(coin_count);
             }
             AccountField::StakedAmount => {
-                account.staked_amount = Some(t);
+                account.staked_amount = Some(total_staked);
             }
             AccountField::ActiveDelegations => {
                 account.active_delegations = Some(active_delegations);

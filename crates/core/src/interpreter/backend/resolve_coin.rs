@@ -3,7 +3,7 @@ use crate::common::{
     coin::{Coin, CoinField},
     query_result::CoinQueryRes,
 };
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use futures::future::try_join_all;
 use sui_sdk::{SuiClient, SuiClientBuilder};
 
@@ -37,11 +37,12 @@ async fn get_coin(
 ) -> Result<CoinQueryRes> {
     let mut coin = CoinQueryRes::default();
     let chain = chain.to_chain().await?;
-    let coin_result = provider
-        .coin_read_api()
-        .get_coin_metadata(coin_id.clone())
-        .await?
-        .unwrap();
+  let coin_result = provider
+    .coin_read_api()
+    .get_coin_metadata(coin_id.clone())
+    .await?
+    .ok_or_else(|| anyhow!("Coin metadata not found for ID: {}", coin_id))?; 
+ 
 
     for field in &fields {
         match field {
