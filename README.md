@@ -107,13 +107,6 @@ async fn main() {
 }
 ```
 
----
-
-### Web Mode
-
-Try **Sui\_Ql** directly in the browser at [https://sui\_ql.sh](https://sui_ql.sh)
-
----
 
 ## 🔍 Supported Queries
 
