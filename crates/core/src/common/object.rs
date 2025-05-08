@@ -3,10 +3,7 @@ use crate::interpreter::frontend::parser::Rule;
 use eql_macros::EnumVariants;
 use pest::iterators::{Pair, Pairs};
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::{write, Display},
-    str::FromStr,
-};
+use std::str::FromStr;
 use sui_types::base_types::{ObjectID, ObjectIDParseError};
 
 #[derive(thiserror::Error, Debug)]
@@ -138,11 +135,9 @@ pub enum ObjectField {
     ObjectId,
     Version,
     Digest,
-    Type,
     Owner,
     PreviousTransaction,
     StorageRebate,
-    Display,
     Chain,
 }
 
@@ -152,11 +147,9 @@ impl std::fmt::Display for ObjectField {
             ObjectField::ObjectId => "object_id",
             ObjectField::Version => "version",
             ObjectField::Digest => "digest",
-            ObjectField::Type => "type",
             ObjectField::Owner => "owner",
             ObjectField::PreviousTransaction => "previous_transaction",
             ObjectField::StorageRebate => "storage_rebate",
-            ObjectField::Display => "display",
             ObjectField::Chain => "chain",
         };
         write!(f, "{s}")
@@ -185,11 +178,9 @@ impl TryFrom<&str> for ObjectField {
             "object_id" => Ok(ObjectField::ObjectId),
             "version" => Ok(ObjectField::Version),
             "digest" => Ok(ObjectField::Digest),
-            "type" => Ok(ObjectField::Type),
             "owner" => Ok(ObjectField::Owner),
             "previous_transaction" => Ok(ObjectField::PreviousTransaction),
             "storage_rebate" => Ok(ObjectField::StorageRebate),
-            "display" => Ok(ObjectField::Display),
             _ => Err(ObjectFieldError::InvalidField(value.to_string())),
         }
     }

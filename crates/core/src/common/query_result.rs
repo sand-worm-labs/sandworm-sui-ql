@@ -1,8 +1,10 @@
+use std::any::TypeId;
+
 use crate::common::chain::Chain;
 //use alloy::primitives::{Address, Bloom, Bytes, FixedBytes, B256, U256};
 use serde::ser::SerializeStruct;
 use serde::{Deserialize, Serialize, Serializer};
-use sui_types::base_types::SuiAddress;
+use sui_types::base_types::{ObjectType, SequenceNumber, SuiAddress};
 use sui_types::digests::TransactionDigest;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
@@ -152,13 +154,13 @@ impl Default for EventQueryRes {
 #[serde_with::skip_serializing_none]
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct ObjectQueryRes {
+    pub chain: Option<Chain>,
     pub object_id: Option<String>,
-    pub version: Option<String>,
+    pub version: Option<SequenceNumber>,
     pub digest: Option<String>,
-    pub type_: Option<String>,
     pub owner: Option<SuiAddress>,
-    pub previous_transaction: Option<String>,
-    pub storage_rebate: Option<String>,
+    pub previous_transaction: Option<TransactionDigest>,
+    pub storage_rebate: Option<u64>,
 }
 
 impl Default for ObjectQueryRes {
@@ -167,10 +169,10 @@ impl Default for ObjectQueryRes {
             object_id: None,
             version: None,
             digest: None,
-            type_: None,
             owner: None,
             previous_transaction: None,
             storage_rebate: None,
+            chain: None,
         }
     }
 }
