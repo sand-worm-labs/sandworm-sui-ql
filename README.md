@@ -53,7 +53,7 @@ Sui\_Ql works in two main phases:
 For example, this query:
 
 ```sql
-SELECT balance, nonce FROM account 0x123... ON sui
+SELECT * FROM account 0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c, test.sui ON mainnet
 ```
 
 Is transformed into:
@@ -100,7 +100,7 @@ use sui_ql_core::interpreter::Interpreter;
 
 #[tokio::main]
 async fn main() {
-    let result = Interpreter::run_program("GET balance FROM account 0x123... ON sui").await.unwrap();
+    let result = Interpreter::run_program("GET balance FROM account 0x123... ON mainnet").await.unwrap();
     println!("{:?}", result);
 }
 ```
@@ -118,9 +118,9 @@ Try **Sui\_Ql** directly in the browser at [https://sui\_ql.sh](https://sui_ql.s
 ### Entities
 
 * `account`
-* `block`
+* `checkpoint`
 * `transaction`
-* `log`
+* `object`
 
 ### Operations
 
