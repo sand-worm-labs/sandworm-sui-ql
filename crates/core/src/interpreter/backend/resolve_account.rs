@@ -63,13 +63,16 @@ async fn get_account(
     let mut account = AccountQueryRes::default();
     let chain = chain.to_chain().await?;
     let stakes = provider
-    .governance_api()
-    .get_stakes(*address)
-    .await?
-    .into_iter()
-    .flat_map(|v| v.stakes);
+        .governance_api()
+        .get_stakes(*address)
+        .await?
+        .into_iter()
+        .flat_map(|v| v.stakes);
 
-    let active_delegations = stakes.clone().filter(|s| matches!(s.status, StakeStatus::Active { .. })).count();
+    let active_delegations = stakes
+        .clone()
+        .filter(|s| matches!(s.status, StakeStatus::Active { .. }))
+        .count();
     let total_staked: u128 = stakes.map(|s| s.principal as u128).sum();
 
     let coin_count = provider
@@ -77,7 +80,6 @@ async fn get_account(
         .get_all_balances(*address)
         .await?
         .len();
-
 
     for field in &fields {
         match field {

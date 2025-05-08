@@ -2,7 +2,7 @@ use super::account::AccountError;
 use super::transaction::TransactionError;
 use crate::common::{
     account::Account, checkpoint::Checkpoint, checkpoint::CheckpointError, coin::Coin,
-    coin::CoinError, transaction::Transaction, object::Object, object::ObjectError,
+    coin::CoinError, object::Object, object::ObjectError, transaction::Transaction,
 };
 use crate::interpreter::frontend::parser::Rule;
 use pest::iterators::Pairs;
