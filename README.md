@@ -1,5 +1,7 @@
 # Sui Query Language (Sui\_Ql)
 
+![image](https://github.com/user-attachments/assets/cfe1ba58-4da0-475e-a626-298946549451)
+
 **Sui\_Ql** is a simple, SQL-like language for querying the Sui blockchain. It eliminates the complexity of interacting directly with the blockchain, handling RPC calls, rate limits, retries, and data formatting behind the scenes, so you can focus on writing your queries and getting results quickly.
 
 ---
