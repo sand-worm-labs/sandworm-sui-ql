@@ -109,9 +109,9 @@ impl TryFrom<&str> for Chain {
 
     fn try_from(chain: &str) -> Result<Self, Self::Error> {
         match chain {
-            "mainnet" => Ok(Chain::Mainnet),
-            "testnet" => Ok(Chain::Testnet),
-            "devnet" => Ok(Chain::Devnet),
+            "sui_mainnet" => Ok(Chain::Mainnet),
+            "sui_testnet" => Ok(Chain::Testnet),
+            "sui_devnet" => Ok(Chain::Devnet),
             _ => Err(ChainError::InvalidChain(chain.to_string())),
         }
     }
@@ -120,9 +120,9 @@ impl TryFrom<&str> for Chain {
 impl fmt::Display for Chain {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let chain_str = match self {
-            Chain::Mainnet => "mainnet",
-            Chain::Testnet => "testnet",
-            Chain::Devnet => "devnet",
+            Chain::Mainnet => "sui_mainnet",
+            Chain::Testnet => "sui_testnet",
+            Chain::Devnet => "sui_devnet",
         };
         write!(f, "{}", chain_str)
     }

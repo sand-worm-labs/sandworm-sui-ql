@@ -232,9 +232,9 @@ number     = _{ float | integer }
 integer    =  { (ASCII_DIGIT)+ }
 float      =  { integer ~ "." ~ integer }
 chain      =  {
-    "mainnet"
-  | "testnet"
-  | "devnet"
+    "sui_mainnet"
+  | "sui_testnet"
+  | "sui_devnet"
 }
 rpc_url    =  { ("http://" | "https://") ~ (ASCII_ALPHANUMERIC | "." | "-" | ":" | "/")+ }
 address    =  { "0x" ~ (ASCII_HEX_DIGIT){64} }
