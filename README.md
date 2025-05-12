@@ -71,11 +71,11 @@ Is transformed into:
 ### Installation
 
 ```bash
-# Install the Sui_Ql version manager
-curl https://raw.githubusercontent.com/yourrepo/sui_ql/main/suiqlup/install.sh | sh
+# Install the SuiQL version manager
+curl -s https://raw.githubusercontent.com/sand-worm-labs/sandworm-sui-ql/main/suiql_up/install.sh | bash
 
-# Install the latest Sui_Ql version
-suiqlup
+# Install the latest SuiQL version
+suiql-up
 ```
 
 ---
@@ -83,8 +83,8 @@ suiqlup
 ### CLI Mode
 
 ```bash
-suiql run query.sq    # Run a query file
-suiql repl             # Start interactive REPL mode
+suiql-up run query.sui_ql    # Run a query file
+suiql-up repl            # Start interactive REPL mode
 ```
 
 ---
@@ -102,7 +102,7 @@ use sui_ql_core::interpreter::Interpreter;
 
 #[tokio::main]
 async fn main() {
-    let result = Interpreter::run_program("GET balance FROM account 0x123... ON mainnet").await.unwrap();
+    let result = Interpreter::run_program("GET balance FROM account 0x123... ON sui_mainnet").await.unwrap();
     println!("{:?}", result);
 }
 ```
