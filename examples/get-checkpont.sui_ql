@@ -1,1 +1,1 @@
-SELECT  * FROM checkpoint 40000 ON mainnet
+SELECT  * FROM checkpoint 40000 ON sui_mainnet

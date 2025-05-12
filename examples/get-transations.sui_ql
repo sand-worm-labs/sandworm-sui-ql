@@ -1,1 +1,1 @@
-SELECT * FROM tx WHERE checkpoint = 45090 ON mainnet
+SELECT * FROM tx WHERE checkpoint = 45090 ON sui_mainnet
