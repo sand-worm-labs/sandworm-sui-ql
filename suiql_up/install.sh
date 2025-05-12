@@ -1,9 +1,11 @@
-USERNAME="iankressin"
-REPO_NAME="sui-ql"
-SUI_QL_UP_URL="https://raw.githubusercontent.com/${USERNAME}/${REPO_NAME}/main/suiql_up/suiql_up.sh"
+#!/bin/bash
+
+USERNAME="sand-worm-labs"
+REPO_NAME="sandworm-sui-ql"
+SUIQL_UP_URL="https://raw.githubusercontent.com/${USERNAME}/${REPO_NAME}/main/suiql_up/suiql_up.sh"
 
 initial_message() {
-    echo "
+    cat << "EOF"
 
   ██████  █    ██  ██▓  █████   ██▓    
 ▒██    ▒  ██  ▓██▒▓██▒▒██▓  ██▒▓██▒    
@@ -14,37 +16,38 @@ initial_message() {
 ░ ░▒  ░ ░░░▒░ ░ ░  ▒ ░ ░ ▒░  ░ ░ ░ ▒  ░
 ░  ░  ░   ░░░ ░ ░  ▒ ░   ░   ░   ░ ░   
       ░     ░      ░      ░        ░  ░
- 
-    "
 
-    echo "[INFO] Installing sui_qlup, the version manager of SUI_QL"
+[INFO] Installing suiql-up, the version manager for SUIQL
+EOF
 }
 
 remove_old_version() {
-    echo "[INFO] Removing old version of sui-qlup"
-    sudo rm -f /usr/local/bin/sui_qlup
-    echo "[INFO] Old version removed "
+    echo "[INFO] Removing old version of suiql-up (if any)"
+    sudo rm -f /usr/local/bin/suiql-up
+    echo "[INFO] Old version removed (if existed)"
 }
 
-download_sui-qlup() {
-    curl -s -o sui-qlup.sh $SUI_QL_UP_URL
-    chmod +x sui-qlup.sh
+download_suiql_up() {
+    echo "[INFO] Downloading latest suiql-up..."
+    curl -fsSL -o suiql-up.sh "$SUIQL_UP_URL"
+    chmod +x suiql-up.sh
 }
 
-move_sui-qlup() {
-    sudo mv sui-qlup.sh /usr/local/bin/sui-qlup
+move_suiql_up() {
+    echo "[INFO] Moving suiql-up to /usr/local/bin..."
+    sudo mv suiql-up.sh /usr/local/bin/suiql-up
 }
 
 final_message() {
     echo "---------------------- Installation complete ----------------------"
-    echo ">>> Run 'sui-qlup' to install EVM Query Language (SUI_QL)"
+    echo ">>> Run 'suiql-up' to install or manage SUIQL versions"
 }
 
 main() {
     initial_message
     remove_old_version
-    download_sui-qlup
-    move_sui-qlup
+    download_suiql_up
+    move_suiql_up
     final_message
 }
 
