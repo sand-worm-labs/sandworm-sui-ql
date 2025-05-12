@@ -2,7 +2,7 @@
 
 USERNAME="sand-worm-labs"
 REPO_NAME="sandworm-sui-ql"
-SUIQL_UP_URL="https://raw.githubusercontent.com/${USERNAME}/${REPO_NAME}/main/suiql_up/suiql_up.sh"
+SUIQL_UP_URL="https://raw.githubusercontent.com/${USERNAME}/${REPO_NAME}/main/suiqlup/suiqlup.sh"
 
 initial_message() {
     cat << "EOF"
