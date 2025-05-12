@@ -55,7 +55,7 @@ Sui\_Ql works in two main phases:
 For example, this query:
 
 ```sql
-SELECT * FROM account 0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c, test.sui ON mainnet
+SELECT * FROM account 0xac5bceec1b789ff840d7d4e6ce4ce61c90d190a7f8c4f4ddf0bff6ee2413c33c, test.sui ON sui_mainnet
 ```
 
 Is transformed into:
@@ -72,10 +72,10 @@ Is transformed into:
 
 ```bash
 # Install the SuiQL version manager
-curl -s https://raw.githubusercontent.com/sand-worm-labs/sandworm-sui-ql/main/suiql_up/install.sh | bash
+curl -s https://raw.githubusercontent.com/sand-worm-labs/sandworm-sui-ql/main/suiqlup/install.sh | bash
 
 # Install the latest SuiQL version
-suiql-up
+suiqlup
 ```
 
 ---
@@ -83,8 +83,8 @@ suiql-up
 ### CLI Mode
 
 ```bash
-suiql-up run query.sui_ql    # Run a query file
-suiql-up repl            # Start interactive REPL mode
+suiqlup run query.sui_ql    # Run a query file
+suiqlup repl            # Start interactive REPL mode
 ```
 
 ---
