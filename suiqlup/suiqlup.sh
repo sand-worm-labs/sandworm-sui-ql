@@ -4,10 +4,10 @@ USERNAME="sand-worm-labs"
 REPO_NAME="sandworm-sui-ql"
 REPO_URL="https://github.com/${USERNAME}/${REPO_NAME}"
 REPO_API_URL="https://api.github.com/repos/${USERNAME}/${REPO_NAME}"
-CONFIG_FILE_URL="https://raw.githubusercontent.com/${USERNAME}/${REPO_NAME}/main/suiql_up/default-config.json"
+CONFIG_FILE_URL="https://raw.githubusercontent.com/${USERNAME}/${REPO_NAME}/main/suiqlup/default-config.json"
 
-LINUX_ASSET="suiql-up"
-MAC_ASSET="suiql-up"
+LINUX_ASSET="suiqlup"
+MAC_ASSET="suiqlup"
 
 get_latest_release_tag() {
     LATEST_RELEASE_TAG=$(curl -s "${REPO_API_URL}/releases/latest" | sed -n 's/.*"tag_name": "\(.*\)".*/\1/p')
@@ -26,10 +26,10 @@ initial_message() {
 ░  ░  ░   ░░░ ░ ░  ▒ ░   ░   ░   ░ ░    ░░░ ░ ░ ░░       
       ░     ░      ░      ░        ░  ░   ░              
 
-        ((( The suiql-up version manager )))
+        ((( The suiqlup version manager )))
     "
 
-    echo "[INFO] Installing the latest version of suiql-up: $LATEST_RELEASE_TAG"
+    echo "[INFO] Installing the latest version of suiqlup: $LATEST_RELEASE_TAG"
 }
 
 detect_os() {
@@ -51,20 +51,20 @@ detect_os() {
 
 download_asset() {
     echo "[INFO] Downloading asset"
-    curl -L -o suiql-up-release "${REPO_URL}/releases/download/${LATEST_RELEASE_TAG}/${ASSET_NAME}"
+    curl -L -o suiqlup-release "${REPO_URL}/releases/download/${LATEST_RELEASE_TAG}/${ASSET_NAME}"
     echo "[INFO] Asset downloaded"
 }
 
 move_to_bin() {
     echo "[INFO] Moving to /usr/local/bin"
-    sudo mv suiql-up-release /usr/local/bin/suiql-up
-    chmod +x /usr/local/bin/suiql-up
-    echo "[INFO] Installed to /usr/local/bin/suiql-up"
+    sudo mv suiqlup-release /usr/local/bin/suiqlup
+    chmod +x /usr/local/bin/suiqlup
+    echo "[INFO] Installed to /usr/local/bin/suiqlup"
 }
 
 remove_old_version() {
-    echo "[INFO] Removing old version of suiql-up"
-    sudo rm -f /usr/local/bin/suiql-up
+    echo "[INFO] Removing old version of suiqlup"
+    sudo rm -f /usr/local/bin/suiqlup
     echo "[INFO] Old version removed"
 }
 
@@ -85,7 +85,7 @@ cleanup() {
 
 final_message() {
     echo "---------------------- Installation complete ----------------------"
-    echo ">>> Run 'suiql-up --help' to get started"
+    echo ">>> Run 'suiqlup --help' to get started"
 }
 
 main() {

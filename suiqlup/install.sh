@@ -17,30 +17,30 @@ initial_message() {
 ░  ░  ░   ░░░ ░ ░  ▒ ░   ░   ░   ░ ░   
       ░     ░      ░      ░        ░  ░
 
-[INFO] Installing suiql-up, the version manager for SUIQL
+[INFO] Installing suiqlup, the version manager for SUIQL
 EOF
 }
 
 remove_old_version() {
-    echo "[INFO] Removing old version of suiql-up (if any)"
-    sudo rm -f /usr/local/bin/suiql-up
+    echo "[INFO] Removing old version of suiqlup (if any)"
+    sudo rm -f /usr/local/bin/suiqlup
     echo "[INFO] Old version removed (if existed)"
 }
 
 download_suiql_up() {
-    echo "[INFO] Downloading latest suiql-up..."
-    curl -fsSL -o suiql-up.sh "$SUIQL_UP_URL"
-    chmod +x suiql-up.sh
+    echo "[INFO] Downloading latest suiqlup..."
+    curl -fsSL -o suiqlup.sh "$SUIQL_UP_URL"
+    chmod +x suiqlup.sh
 }
 
 move_suiql_up() {
-    echo "[INFO] Moving suiql-up to /usr/local/bin..."
-    sudo mv suiql-up.sh /usr/local/bin/suiql-up
+    echo "[INFO] Moving suiqlup to /usr/local/bin..."
+    sudo mv suiqlup.sh /usr/local/bin/suiqlup
 }
 
 final_message() {
     echo "---------------------- Installation complete ----------------------"
-    echo ">>> Run 'suiql-up' to install or manage SUIQL versions"
+    echo ">>> Run 'suiqlup' to install or manage SUIQL versions"
 }
 
 main() {
