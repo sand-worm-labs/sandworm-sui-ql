@@ -102,7 +102,7 @@ use sui_ql_core::interpreter::Interpreter;
 
 #[tokio::main]
 async fn main() {
-    let result = Interpreter::run_program("GET balance FROM account 0x123... ON sui_mainnet").await.unwrap();
+    let result = Interpreter::run_program("Select balance FROM account 0x123... ON sui_mainnet").await.unwrap();
     println!("{:?}", result);
 }
 ```
